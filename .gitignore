@@ -1,0 +1,95 @@
+## .NET / C# ##
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+coverage*.xml
+coverage*.json
+*.coveragexml
+*.coverage
+
+# Publish output
+publish/
+**/publish/
+PublishProfiles/
+
+# Entity Framework migrations (keep migrations, ignore snapshots if desired)
+# Uncomment if you want to ignore EF snapshots
+# **/Migrations/*Snapshot.cs
+
+## Environment / Secrets ##
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.local.json
+**/secrets.json
+
+## Docker ##
+# Docker override files (local dev overrides)
+docker-compose.override.yml
+docker-compose.local.yml
+
+## OS ##
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+## IDE ##
+# Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+## Misc ##
+*.log
+*.tmp
+*.bak
+*.swp

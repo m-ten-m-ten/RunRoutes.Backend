@@ -1,0 +1,19 @@
+services:
+    postgres:
+        image: postgis/postgis:16-3.4-alpine
+        # docker既存のコンテナとポートが競合しないように設定
+        ports:
+            - 5451:5432
+        volumes:
+            - pgdata-runroutes:/var/lib/postgresql/data
+        environment:
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=Japanese_Japan.932"
+            TZ: "Asia/Tokyo"
+        hostname: postgres
+        user: postgres
+
+volumes:
+    # 初回起動前に `docker volume create --name pgdata-runroutes` を実行すること
+    pgdata-runroutes:
+        external: true

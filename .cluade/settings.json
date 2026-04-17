@@ -1,0 +1,28 @@
+{
+    "sandbox": {
+        "enabled": true,
+        "allowUnsandboxedCommands": false,
+        "network": {
+            "allowedDomains": [
+                "*.npmjs.org"
+            ]
+        }
+    },
+    "permissions": {
+        "disableBypassPermissionsMode": "disable",
+        "deny": [
+            "Bash(rm -rf *)",
+            "Bash(curl *)",
+            "Bash(wget *)",
+            "Bash(git push *)",
+            "Bash(chmod 777 *)",
+            "Read(./.env)",
+            "Read(./.env.*)",
+            "Read(./secrets/**)",
+            "Read(./appsettings.json)",
+            "Read(./appsettings.Development.json)",
+            "Read(**/*.pem)",
+            "Read(**/*.key)"
+        ]
+    }
+}
