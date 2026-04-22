@@ -9,11 +9,14 @@ using RunRoutes.Core.Interfaces.Services;
 
 namespace RunRoutes.Core.Services;
 
-public class CourseService(ICourseRepository courseRepository) : ICourseService
+public class CourseService(
+    ICourseRepository courseRepository,
+    ICommentRepository commentRepository) : ICourseService
 {
     private static readonly string[] ValidDifficulties = ["easy", "medium", "hard"];
 
     private readonly ICourseRepository _courseRepository = courseRepository;
+    private readonly ICommentRepository _commentRepository = commentRepository;
 
     public async Task<GetCoursesResponse> GetListAsync(GetCoursesQuery query, Guid? currentUserId)
     {
@@ -37,7 +40,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
     {
         ValidateDifficulty(request.Difficulty);
         var route = ResolveRoute(request.Route, request.GpxXml);
-        var tags = await _courseRepository.GetTagsByIdsAsync(request.TagIds ?? []);
+        var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds ?? []);
 
         var course = new Course
         {
@@ -62,7 +65,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
 
     public async Task<UpdateCourseResponse> UpdateAsync(Guid id, UpdateCourseRequest request, Guid userId)
     {
-        var course = await _courseRepository.GetByIdAsync(id)
+        var course = await _courseRepository.GetByIdForUpdateAsync(id)
             ?? throw new NotFoundException("コースが見つかりません");
 
         if (course.UserId != userId)
@@ -85,19 +88,20 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
 
         if (request.TagIds is not null)
         {
-            var tags = await _courseRepository.GetTagsByIdsAsync(request.TagIds);
+            var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds);
             course.Tags = tags.ToList();
         }
 
         course.UpdatedAt = DateTime.UtcNow;
         await _courseRepository.UpdateAsync(course);
 
+        course.CommentCount = await _commentRepository.GetCountByCourseIdAsync(id);
         return new UpdateCourseResponse(ToCourseDetailDto(course));
     }
 
     public async Task DeleteAsync(Guid id, Guid userId)
     {
-        var course = await _courseRepository.GetByIdAsync(id)
+        var course = await _courseRepository.GetByIdForUpdateAsync(id)
             ?? throw new NotFoundException("コースが見つかりません");
 
         if (course.UserId != userId)
@@ -157,7 +161,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         c.Id, c.Title, c.Difficulty, c.DistanceM, c.IsPublic,
         new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
-        c.Comments.Count,
+        c.CommentCount,
         c.CreatedAt
     );
 
@@ -166,7 +170,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         new GeoJsonLineStringDto("LineString", c.Route.Coordinates.Select(coord => new[] { coord.X, coord.Y })),
         new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
-        c.Comments.Count,
+        c.CommentCount,
         c.CreatedAt,
         c.UpdatedAt
     );

@@ -38,8 +38,7 @@ public class CommentServiceTests
         var userId = Guid.NewGuid();
         var request = new CreateCommentRequest("Test comment");
 
-        _courseRepoMock.Setup(r => r.GetByIdAsync(courseId))
-            .ReturnsAsync(new Course { Id = courseId });
+        _courseRepoMock.Setup(r => r.ExistsByIdAsync(courseId)).ReturnsAsync(true);
         _commentRepoMock.Setup(r => r.AddAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
 
         var result = await _sut.CreateAsync(courseId, request, userId);
@@ -50,7 +49,7 @@ public class CommentServiceTests
     [Fact]
     public async Task Create_存在しないコースでNotFoundException()
     {
-        _courseRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Course?)null);
+        _courseRepoMock.Setup(r => r.ExistsByIdAsync(It.IsAny<Guid>())).ReturnsAsync(false);
 
         await Assert.ThrowsAsync<NotFoundException>(
             () => _sut.CreateAsync(Guid.NewGuid(), new CreateCommentRequest("body"), Guid.NewGuid()));
@@ -64,7 +63,7 @@ public class CommentServiceTests
         var comment = MakeComment(userId, courseId);
         var request = new UpdateCommentRequest("Updated body");
 
-        _commentRepoMock.Setup(r => r.GetByIdAsync(comment.Id)).ReturnsAsync(comment);
+        _commentRepoMock.Setup(r => r.GetByIdForUpdateAsync(comment.Id)).ReturnsAsync(comment);
         _commentRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Comment>())).Returns(Task.CompletedTask);
 
         var result = await _sut.UpdateAsync(courseId, comment.Id, request, userId);
@@ -80,7 +79,7 @@ public class CommentServiceTests
         var comment = MakeComment(ownerId, courseId);
         var request = new UpdateCommentRequest("Updated body");
 
-        _commentRepoMock.Setup(r => r.GetByIdAsync(comment.Id)).ReturnsAsync(comment);
+        _commentRepoMock.Setup(r => r.GetByIdForUpdateAsync(comment.Id)).ReturnsAsync(comment);
 
         await Assert.ThrowsAsync<ForbiddenException>(
             () => _sut.UpdateAsync(courseId, comment.Id, request, Guid.NewGuid()));
@@ -93,7 +92,7 @@ public class CommentServiceTests
         var courseId = Guid.NewGuid();
         var comment = MakeComment(userId, courseId);
 
-        _commentRepoMock.Setup(r => r.GetByIdAsync(comment.Id)).ReturnsAsync(comment);
+        _commentRepoMock.Setup(r => r.GetByIdForUpdateAsync(comment.Id)).ReturnsAsync(comment);
         _commentRepoMock.Setup(r => r.DeleteAsync(comment)).Returns(Task.CompletedTask);
 
         await _sut.DeleteAsync(courseId, comment.Id, userId);
@@ -108,7 +107,7 @@ public class CommentServiceTests
         var courseId = Guid.NewGuid();
         var comment = MakeComment(ownerId, courseId);
 
-        _commentRepoMock.Setup(r => r.GetByIdAsync(comment.Id)).ReturnsAsync(comment);
+        _commentRepoMock.Setup(r => r.GetByIdForUpdateAsync(comment.Id)).ReturnsAsync(comment);
 
         await Assert.ThrowsAsync<ForbiddenException>(
             () => _sut.DeleteAsync(courseId, comment.Id, Guid.NewGuid()));

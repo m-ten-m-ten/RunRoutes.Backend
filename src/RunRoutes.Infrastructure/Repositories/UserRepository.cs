@@ -8,18 +8,21 @@ namespace RunRoutes.Infrastructure.Repositories;
 public class UserRepository(AppDbContext db) : IUserRepository
 {
     public Task<User?> GetByIdAsync(Guid id) =>
+        db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+
+    public Task<User?> GetByIdForUpdateAsync(Guid id) =>
         db.Users.FirstOrDefaultAsync(u => u.Id == id);
 
-    public Task<User?> GetByEmailAsync(string email) =>
+    public Task<User?> GetByEmailForUpdateAsync(string email) =>
         db.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-    public Task<User?> GetByActivationTokenAsync(string token) =>
+    public Task<User?> GetByActivationTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.ActivationToken == token);
 
-    public Task<User?> GetByEmailChangeTokenAsync(string token) =>
+    public Task<User?> GetByEmailChangeTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.EmailChangeToken == token);
 
-    public Task<User?> GetByRefreshTokenAsync(string token) =>
+    public Task<User?> GetByRefreshTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
 
     public Task<bool> ExistsByEmailAsync(string email) =>

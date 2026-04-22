@@ -12,11 +12,8 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
     public async Task<(IEnumerable<Course> Courses, int TotalCount)> GetListAsync(GetCoursesQuery query, Guid? currentUserId)
     {
         var q = db.Courses
-            .Include(c => c.User)
-            .Include(c => c.Tags)
-            .Include(c => c.Comments)
-            .Where(c => c.IsPublic || c.UserId == currentUserId)
-            .AsQueryable();
+            .AsNoTracking()
+            .Where(c => c.IsPublic || c.UserId == currentUserId);
 
         if (query.Difficulty is not null)
             q = q.Where(c => c.Difficulty == query.Difficulty);
@@ -36,6 +33,22 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
             .OrderByDescending(c => c.CreatedAt)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
+            .Select(c => new Course
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Title = c.Title,
+                Description = c.Description,
+                Difficulty = c.Difficulty,
+                Route = c.Route,
+                DistanceM = c.DistanceM,
+                IsPublic = c.IsPublic,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt,
+                User = c.User,
+                Tags = c.Tags.ToList(),
+                CommentCount = c.Comments.Count,
+            })
             .ToListAsync();
 
         return (courses, totalCount);
@@ -43,10 +56,34 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
 
     public Task<Course?> GetByIdAsync(Guid id) =>
         db.Courses
+            .AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new Course
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Title = c.Title,
+                Description = c.Description,
+                Difficulty = c.Difficulty,
+                Route = c.Route,
+                DistanceM = c.DistanceM,
+                IsPublic = c.IsPublic,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt,
+                User = c.User,
+                Tags = c.Tags.ToList(),
+                CommentCount = c.Comments.Count,
+            })
+            .FirstOrDefaultAsync();
+
+    public Task<Course?> GetByIdForUpdateAsync(Guid id) =>
+        db.Courses
             .Include(c => c.User)
             .Include(c => c.Tags)
-            .Include(c => c.Comments)
             .FirstOrDefaultAsync(c => c.Id == id);
+
+    public Task<bool> ExistsByIdAsync(Guid id) =>
+        db.Courses.AnyAsync(c => c.Id == id);
 
     public async Task AddAsync(Course course)
     {
@@ -66,7 +103,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
         await db.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Tag>> GetTagsByIdsAsync(IEnumerable<Guid> tagIds)
+    public async Task<IEnumerable<Tag>> GetTagsByIdsForUpdateAsync(IEnumerable<Guid> tagIds)
     {
         var ids = tagIds.ToList();
         return await db.Tags.Where(t => ids.Contains(t.Id)).ToListAsync();

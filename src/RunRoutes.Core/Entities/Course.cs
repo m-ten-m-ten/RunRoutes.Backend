@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
 
 namespace RunRoutes.Core.Entities;
@@ -18,4 +19,7 @@ public class Course
     public User User { get; set; } = null!;
     public ICollection<Comment> Comments { get; set; } = [];
     public ICollection<Tag> Tags { get; set; } = [];
+
+    [NotMapped]
+    public int CommentCount { get; set; }
 }
