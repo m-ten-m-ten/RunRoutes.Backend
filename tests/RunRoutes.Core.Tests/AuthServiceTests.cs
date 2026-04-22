@@ -86,7 +86,7 @@ public class AuthServiceTests
         };
         var request = new LoginRequest(user.Email, password);
 
-        _userRepoMock.Setup(r => r.GetByEmailAsync(request.Email)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(request.Email)).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("access_token");
         _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns("refresh_token");
         _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
@@ -108,7 +108,7 @@ public class AuthServiceTests
             IsActive = false,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("password")
         };
-        _userRepoMock.Setup(r => r.GetByEmailAsync(user.Email)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
             () => _sut.LoginAsync(new LoginRequest(user.Email, "password")));
@@ -124,7 +124,7 @@ public class AuthServiceTests
             IsActive = true,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct_password")
         };
-        _userRepoMock.Setup(r => r.GetByEmailAsync(user.Email)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
             () => _sut.LoginAsync(new LoginRequest(user.Email, "wrong_password")));
@@ -134,7 +134,7 @@ public class AuthServiceTests
     public async Task Login_存在しないメールでValidationException()
     {
         _userRepoMock
-            .Setup(r => r.GetByEmailAsync(It.IsAny<string>()))
+            .Setup(r => r.GetByEmailForUpdateAsync(It.IsAny<string>()))
             .ReturnsAsync((User?)null);
 
         await Assert.ThrowsAsync<ValidationException>(
@@ -153,7 +153,7 @@ public class AuthServiceTests
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
             CreatedAt = DateTime.UtcNow
         };
-        _userRepoMock.Setup(r => r.GetByRefreshTokenAsync("old_refresh")).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("old_refresh")).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("new_access_token");
         _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns("new_refresh_token");
         _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
@@ -172,7 +172,7 @@ public class AuthServiceTests
             RefreshToken = "expired_refresh",
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(-1)
         };
-        _userRepoMock.Setup(r => r.GetByRefreshTokenAsync("expired_refresh")).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("expired_refresh")).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(() => _sut.RefreshAsync("expired_refresh"));
     }

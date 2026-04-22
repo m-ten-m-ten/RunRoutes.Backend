@@ -8,5 +8,5 @@ namespace RunRoutes.Infrastructure.Repositories;
 public class TagRepository(AppDbContext db) : ITagRepository
 {
     public async Task<IEnumerable<Tag>> GetAllAsync() =>
-        await db.Tags.OrderBy(t => t.Name).ToListAsync();
+        await db.Tags.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
 }

@@ -50,7 +50,7 @@ public class AuthService(
 
     public async Task ActivateAsync(string token)
     {
-        var user = await _userRepository.GetByActivationTokenAsync(token)
+        var user = await _userRepository.GetByActivationTokenForUpdateAsync(token)
             ?? throw new NotFoundException("有効化トークンが無効です");
 
         if (user.ActivationTokenExpiresAt < DateTime.UtcNow)
@@ -66,7 +66,7 @@ public class AuthService(
 
     public async Task<(LoginResponse Response, string RefreshToken)> LoginAsync(LoginRequest request)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email)
+        var user = await _userRepository.GetByEmailForUpdateAsync(request.Email)
             ?? throw new ValidationException("メールアドレスまたはパスワードが正しくありません");
 
         if (!user.IsActive)
@@ -89,7 +89,7 @@ public class AuthService(
 
     public async Task LogoutAsync(string refreshToken)
     {
-        var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+        var user = await _userRepository.GetByRefreshTokenForUpdateAsync(refreshToken);
         if (user is null) return;
 
         user.RefreshToken = null;
@@ -101,7 +101,7 @@ public class AuthService(
 
     public async Task<(RefreshResponse Response, string NewRefreshToken)> RefreshAsync(string refreshToken)
     {
-        var user = await _userRepository.GetByRefreshTokenAsync(refreshToken)
+        var user = await _userRepository.GetByRefreshTokenForUpdateAsync(refreshToken)
             ?? throw new ValidationException("リフレッシュトークンが無効です");
 
         if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
@@ -129,7 +129,7 @@ public class AuthService(
 
     public async Task<UpdateMeResponse> UpdateMeAsync(Guid userId, UpdateMeRequest request)
     {
-        var user = await _userRepository.GetByIdAsync(userId)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId)
             ?? throw new NotFoundException("ユーザーが見つかりません");
 
         if (request.Username is not null)
@@ -158,7 +158,7 @@ public class AuthService(
 
     public async Task<UpdateEmailResponse> UpdateEmailAsync(Guid userId, UpdateEmailRequest request)
     {
-        var user = await _userRepository.GetByIdAsync(userId)
+        var user = await _userRepository.GetByIdForUpdateAsync(userId)
             ?? throw new NotFoundException("ユーザーが見つかりません");
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
@@ -181,7 +181,7 @@ public class AuthService(
 
     public async Task ActivateEmailAsync(string token)
     {
-        var user = await _userRepository.GetByEmailChangeTokenAsync(token)
+        var user = await _userRepository.GetByEmailChangeTokenForUpdateAsync(token)
             ?? throw new NotFoundException("メール変更トークンが無効です");
 
         if (user.EmailChangeTokenExpiresAt < DateTime.UtcNow)
