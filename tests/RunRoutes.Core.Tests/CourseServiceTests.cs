@@ -12,11 +12,12 @@ namespace RunRoutes.Core.Tests;
 public class CourseServiceTests
 {
     private readonly Mock<ICourseRepository> _courseRepoMock = new();
+    private readonly Mock<ICommentRepository> _commentRepoMock = new();
     private readonly CourseService _sut;
 
     public CourseServiceTests()
     {
-        _sut = new CourseService(_courseRepoMock.Object);
+        _sut = new CourseService(_courseRepoMock.Object, _commentRepoMock.Object);
     }
 
     private static Course MakeCourse(Guid? userId = null, Guid? courseId = null)
@@ -49,7 +50,7 @@ public class CourseServiceTests
             null, []);
 
         Course? addedCourse = null;
-        _courseRepoMock.Setup(r => r.GetTagsByIdsAsync(It.IsAny<IEnumerable<Guid>>()))
+        _courseRepoMock.Setup(r => r.GetTagsByIdsForUpdateAsync(It.IsAny<IEnumerable<Guid>>()))
             .ReturnsAsync([]);
         _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>()))
             .Callback<Course>(c => addedCourse = c)
@@ -101,8 +102,9 @@ public class CourseServiceTests
         var course = MakeCourse(userId);
         var request = new UpdateCourseRequest("Updated Title", null, null, null, null, null, null);
 
-        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(course);
+        _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
         _courseRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Course>())).Returns(Task.CompletedTask);
+        _commentRepoMock.Setup(r => r.GetCountByCourseIdAsync(course.Id)).ReturnsAsync(0);
 
         var result = await _sut.UpdateAsync(course.Id, request, userId);
 
@@ -116,7 +118,7 @@ public class CourseServiceTests
         var course = MakeCourse(ownerId);
         var request = new UpdateCourseRequest(null, null, null, null, null, null, null);
 
-        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(course);
+        _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
 
         await Assert.ThrowsAsync<ForbiddenException>(
             () => _sut.UpdateAsync(course.Id, request, Guid.NewGuid()));
@@ -128,7 +130,7 @@ public class CourseServiceTests
         var userId = Guid.NewGuid();
         var course = MakeCourse(userId);
 
-        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(course);
+        _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
         _courseRepoMock.Setup(r => r.DeleteAsync(course)).Returns(Task.CompletedTask);
 
         await _sut.DeleteAsync(course.Id, userId);
@@ -142,7 +144,7 @@ public class CourseServiceTests
         var ownerId = Guid.NewGuid();
         var course = MakeCourse(ownerId);
 
-        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(course);
+        _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
 
         await Assert.ThrowsAsync<ForbiddenException>(
             () => _sut.DeleteAsync(course.Id, Guid.NewGuid()));

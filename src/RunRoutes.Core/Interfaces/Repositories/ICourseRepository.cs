@@ -7,8 +7,10 @@ public interface ICourseRepository
 {
     Task<(IEnumerable<Course> Courses, int TotalCount)> GetListAsync(GetCoursesQuery query, Guid? currentUserId);
     Task<Course?> GetByIdAsync(Guid id);
+    Task<Course?> GetByIdForUpdateAsync(Guid id);
+    Task<bool> ExistsByIdAsync(Guid id);
     Task AddAsync(Course course);
     Task UpdateAsync(Course course);
     Task DeleteAsync(Course course);
-    Task<IEnumerable<Tag>> GetTagsByIdsAsync(IEnumerable<Guid> tagIds);
+    Task<IEnumerable<Tag>> GetTagsByIdsForUpdateAsync(IEnumerable<Guid> tagIds);
 }

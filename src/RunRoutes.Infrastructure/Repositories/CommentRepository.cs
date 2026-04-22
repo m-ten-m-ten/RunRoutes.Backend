@@ -9,12 +9,16 @@ public class CommentRepository(AppDbContext db) : ICommentRepository
 {
     public async Task<IEnumerable<Comment>> GetByCourseIdAsync(Guid courseId) =>
         await db.Comments
+            .AsNoTracking()
             .Include(c => c.User)
             .Where(c => c.CourseId == courseId)
             .OrderBy(c => c.CreatedAt)
             .ToListAsync();
 
-    public Task<Comment?> GetByIdAsync(Guid id) =>
+    public Task<int> GetCountByCourseIdAsync(Guid courseId) =>
+        db.Comments.CountAsync(c => c.CourseId == courseId);
+
+    public Task<Comment?> GetByIdForUpdateAsync(Guid id) =>
         db.Comments.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id);
 
     public async Task AddAsync(Comment comment)

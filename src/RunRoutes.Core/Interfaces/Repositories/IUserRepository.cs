@@ -5,10 +5,11 @@ namespace RunRoutes.Core.Interfaces.Repositories;
 public interface IUserRepository
 {
     Task<User?> GetByIdAsync(Guid id);
-    Task<User?> GetByEmailAsync(string email);
-    Task<User?> GetByActivationTokenAsync(string token);
-    Task<User?> GetByEmailChangeTokenAsync(string token);
-    Task<User?> GetByRefreshTokenAsync(string token);
+    Task<User?> GetByIdForUpdateAsync(Guid id);
+    Task<User?> GetByEmailForUpdateAsync(string email);
+    Task<User?> GetByActivationTokenForUpdateAsync(string token);
+    Task<User?> GetByEmailChangeTokenForUpdateAsync(string token);
+    Task<User?> GetByRefreshTokenForUpdateAsync(string token);
     Task<bool> ExistsByEmailAsync(string email);
     Task<bool> ExistsByUsernameAsync(string username);
     Task AddAsync(User user);

@@ -20,8 +20,8 @@ public class CommentService(ICommentRepository commentRepository, ICourseReposit
 
     public async Task<CreateCommentResponse> CreateAsync(Guid courseId, CreateCommentRequest request, Guid userId)
     {
-        _ = await _courseRepository.GetByIdAsync(courseId)
-            ?? throw new NotFoundException("コースが見つかりません");
+        if (!await _courseRepository.ExistsByIdAsync(courseId))
+            throw new NotFoundException("コースが見つかりません");
 
         var comment = new Comment
         {
@@ -39,7 +39,7 @@ public class CommentService(ICommentRepository commentRepository, ICourseReposit
 
     public async Task<UpdateCommentResponse> UpdateAsync(Guid courseId, Guid commentId, UpdateCommentRequest request, Guid userId)
     {
-        var comment = await _commentRepository.GetByIdAsync(commentId)
+        var comment = await _commentRepository.GetByIdForUpdateAsync(commentId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
         if (comment.CourseId != courseId)
@@ -57,7 +57,7 @@ public class CommentService(ICommentRepository commentRepository, ICourseReposit
 
     public async Task DeleteAsync(Guid courseId, Guid commentId, Guid userId)
     {
-        var comment = await _commentRepository.GetByIdAsync(commentId)
+        var comment = await _commentRepository.GetByIdForUpdateAsync(commentId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
         if (comment.CourseId != courseId)
