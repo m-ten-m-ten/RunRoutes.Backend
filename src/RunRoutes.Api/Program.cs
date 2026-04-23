@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 using RunRoutes.Api.Extensions;
 using RunRoutes.Api.Middleware;
 using RunRoutes.Core.Settings;
@@ -34,6 +35,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.Configure<ResendClientOptions>(o =>
+{
+    o.ApiToken = builder.Configuration["Email:ApiKey"]!;
+});
+builder.Services.AddHttpClient<IResend, ResendClient>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
