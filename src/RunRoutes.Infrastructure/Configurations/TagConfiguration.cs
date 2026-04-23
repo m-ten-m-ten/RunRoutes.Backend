@@ -14,6 +14,11 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
         builder.Property(t => t.Id).HasColumnName("id");
         builder.Property(t => t.Name).HasColumnName("name");
         builder.Property(t => t.CreatedAt).HasColumnName("created_at");
+        builder.Property(t => t.Version)
+            .HasColumnName("xmin")
+            .HasColumnType("xid")
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
 
         builder.HasIndex(t => t.Name).IsUnique();
     }

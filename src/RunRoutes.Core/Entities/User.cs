@@ -16,6 +16,7 @@ public class User
     public DateTime? RefreshTokenExpiresAt { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public UserRole Role { get; set; } = UserRole.User;
 
     public ICollection<Course> Courses { get; set; } = [];
     public ICollection<Comment> Comments { get; set; } = [];

@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICourseService, CourseService>();
         services.AddScoped<ICommentService, CommentService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<AdminRoleSeeder>();
 
         return services;
     }

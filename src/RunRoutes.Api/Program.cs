@@ -7,6 +7,7 @@ using RunRoutes.Api.Extensions;
 using RunRoutes.Api.Middleware;
 using RunRoutes.Core.Settings;
 using RunRoutes.Infrastructure.Data;
+using RunRoutes.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+builder.Services.Configure<AdminSettings>(builder.Configuration.GetSection("Admin"));
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.Configure<ResendClientOptions>(o =>
@@ -94,6 +97,12 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<AdminRoleSeeder>();
+    await seeder.RunAsync();
+}
 
 app.Run();
 
