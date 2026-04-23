@@ -9,6 +9,8 @@ namespace RunRoutes.Api.Tests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
+    public string DatabaseName { get; } = $"TestDb_{Guid.NewGuid():N}";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -25,7 +27,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             foreach (var d in descriptors) services.Remove(d);
 
             services.AddDbContext<AppDbContext>(options =>
-                options.UseInMemoryDatabase("TestDb"));
+                options.UseInMemoryDatabase(DatabaseName));
 
             // Replace EmailService with no-op to avoid SMTP calls
             var emailDescriptor = services
