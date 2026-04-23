@@ -159,7 +159,7 @@ public class CourseService(
 
     private static CourseListItemDto ToCourseListItemDto(Course c) => new(
         c.Id, c.Title, c.Difficulty, c.DistanceM, c.IsPublic,
-        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.CreatedAt),
+        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
         c.CommentCount,
         c.CreatedAt
@@ -168,7 +168,7 @@ public class CourseService(
     private static CourseDetailDto ToCourseDetailDto(Course c) => new(
         c.Id, c.Title, c.Description, c.Difficulty, c.DistanceM, c.IsPublic,
         new GeoJsonLineStringDto("LineString", c.Route.Coordinates.Select(coord => new[] { coord.X, coord.Y })),
-        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.CreatedAt),
+        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
         c.CommentCount,
         c.CreatedAt,

@@ -40,6 +40,7 @@ public class AuthService(
             ActivationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            Role = UserRole.User,
         };
 
         await _userRepository.AddAsync(user);
@@ -116,7 +117,7 @@ public class AuthService(
 
         await _userRepository.UpdateAsync(user);
 
-        return (new RefreshResponse(newAccessToken), newRefreshToken);
+        return (new RefreshResponse(newAccessToken, ToUserDto(user)), newRefreshToken);
     }
 
     public async Task<MeResponse> GetMeAsync(Guid userId)
@@ -197,5 +198,5 @@ public class AuthService(
     }
 
     private static UserDto ToUserDto(User user) =>
-        new(user.Id, user.Email, user.Username, user.CreatedAt);
+        new(user.Id, user.Email, user.Username, user.Role.ToString(), user.CreatedAt);
 }
