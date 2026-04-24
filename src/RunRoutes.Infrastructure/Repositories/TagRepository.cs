@@ -23,7 +23,7 @@ public class TagRepository(AppDbContext db) : ITagRepository
             : db.Tags.AnyAsync(t => t.Name == name && t.Id != excludeId);
 
     public Task<bool> HasCoursesAsync(Guid id) =>
-        db.Tags.Where(t => t.Id == id).SelectMany(t => t.Courses).AnyAsync();
+        db.Tags.AnyAsync(t => t.Id == id && t.Courses.Any());
 
     public async Task AddAsync(Tag tag)
     {

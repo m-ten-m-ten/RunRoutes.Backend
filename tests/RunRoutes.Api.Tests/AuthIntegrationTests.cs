@@ -66,7 +66,7 @@ public class AuthIntegrationTests : IClassFixture<TestWebApplicationFactory>
     {
         var client = _factory.CreateClient();
 
-        // Login to get access token
+        // ログインしてアクセストークンを取得する
         var loginResponse = await client.PostAsJsonAsync("/api/auth/login", new
         {
             Email = TestEmail,
@@ -77,7 +77,7 @@ public class AuthIntegrationTests : IClassFixture<TestWebApplicationFactory>
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResult>();
         Assert.NotNull(loginResult?.AccessToken);
 
-        // Use access token to call protected endpoint
+        // アクセストークンを使用して保護されたエンドポイントを呼び出す
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", loginResult.AccessToken);
 
