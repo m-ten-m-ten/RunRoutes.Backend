@@ -9,9 +9,9 @@ using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;
 
-// NOTE: concurrency failure path (stale RowVersion) is covered by TagServiceTests;
-// the InMemory provider does not enforce xmin / IsConcurrencyToken, so that scenario
-// cannot be reproduced at the integration layer.
+// NOTE: 並行性エラーのパス（RowVersion が古い場合）は TagServiceTests で検証している。
+// InMemory プロバイダは xmin / IsConcurrencyToken を強制しないため、
+// このシナリオは統合テスト層では再現できない。
 public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly TestWebApplicationFactory _factory;
