@@ -15,7 +15,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureServices(services =>
         {
-            // Remove ALL AppDbContext-related registrations (including Npgsql configuration)
+            // AppDbContext 関連の登録を全て削除する（Npgsql 設定も含む）
             var descriptors = services
                 .Where(d =>
                     d.ServiceType == typeof(AppDbContext) ||
@@ -29,7 +29,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
                 options.UseInMemoryDatabase(DatabaseName));
 
-            // Replace EmailService with no-op to avoid SMTP calls
+            // SMTP 呼び出しを避けるため EmailService を no-op に差し替える
             var emailDescriptor = services
                 .FirstOrDefault(d => d.ServiceType == typeof(IEmailService));
             if (emailDescriptor != null) services.Remove(emailDescriptor);
