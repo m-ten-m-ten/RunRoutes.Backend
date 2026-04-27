@@ -40,7 +40,7 @@ public class TagRepository(AppDbContext db) : ITagRepository
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new ConflictException("他のユーザーが先にこのタグを更新しました。最新の内容を再取得してください。");
+            throw new ConflictException("他のユーザーが先にこのタグを更新しました。最新の内容を再取得してください。", ErrorCodes.TagRowVersionMismatch);
         }
     }
 
@@ -54,7 +54,7 @@ public class TagRepository(AppDbContext db) : ITagRepository
         }
         catch (DbUpdateConcurrencyException)
         {
-            throw new ConflictException("他のユーザーが先にこのタグを更新しました。最新の内容を再取得してください。");
+            throw new ConflictException("他のユーザーが先にこのタグを更新しました。最新の内容を再取得してください。", ErrorCodes.TagRowVersionMismatch);
         }
     }
 }

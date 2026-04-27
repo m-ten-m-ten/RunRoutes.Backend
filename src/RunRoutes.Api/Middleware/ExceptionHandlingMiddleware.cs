@@ -38,7 +38,7 @@ public class ExceptionHandlingMiddleware(
             ),
             ConflictException ex => (
                 StatusCodes.Status409Conflict,
-                new ErrorResponse(ex.Message)
+                new ErrorResponse(ex.Message, Code: ex.Code)
             ),
             _ => (
                 StatusCodes.Status500InternalServerError,

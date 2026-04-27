@@ -3,8 +3,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using NetTopologySuite.Geometries;
+using RunRoutes.Core.DTOs.Common;
 using RunRoutes.Core.DTOs.Tags;
 using RunRoutes.Core.Entities;
+using RunRoutes.Core.Exceptions;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;
@@ -120,6 +122,8 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
         var response = await client.PostAsJsonAsync("/api/tags", new CreateTagRequest("duplicate"));
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(ErrorCodes.TagNameDuplicate, error!.Code);
     }
 
     [Fact]
@@ -200,6 +204,8 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
             $"/api/tags/{createdTag.Id}?rowVersion={createdTag.RowVersion}");
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+        Assert.Equal(ErrorCodes.TagInUse, error!.Code);
     }
 
     [Fact]
