@@ -74,7 +74,8 @@ public class TagServiceTests
         var request = new CreateTagRequest("trail");
         _tagRepoMock.Setup(r => r.ExistsByNameAsync("trail", null)).ReturnsAsync(true);
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.CreateAsync(request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.CreateAsync(request));
+        Assert.Equal(ErrorCodes.TagNameDuplicate, ex.Code);
     }
 
     [Fact]
@@ -120,8 +121,9 @@ public class TagServiceTests
         _tagRepoMock.Setup(r => r.GetByIdForUpdateAsync(tag.Id)).ReturnsAsync(tag);
         _tagRepoMock.Setup(r => r.ExistsByNameAsync("mountain", tag.Id)).ReturnsAsync(true);
 
-        await Assert.ThrowsAsync<ConflictException>(
+        var ex = await Assert.ThrowsAsync<ConflictException>(
             () => _sut.UpdateAsync(tag.Id, new UpdateTagRequest("mountain", 1)));
+        Assert.Equal(ErrorCodes.TagNameDuplicate, ex.Code);
     }
 
     [Fact]
@@ -132,10 +134,11 @@ public class TagServiceTests
         _tagRepoMock.Setup(r => r.ExistsByNameAsync("mountain", tag.Id)).ReturnsAsync(false);
         _tagRepoMock
             .Setup(r => r.UpdateWithConcurrencyCheckAsync(tag, 1u))
-            .ThrowsAsync(new ConflictException("stale"));
+            .ThrowsAsync(new ConflictException("stale", ErrorCodes.TagRowVersionMismatch));
 
-        await Assert.ThrowsAsync<ConflictException>(
+        var ex = await Assert.ThrowsAsync<ConflictException>(
             () => _sut.UpdateAsync(tag.Id, new UpdateTagRequest("mountain", 1)));
+        Assert.Equal(ErrorCodes.TagRowVersionMismatch, ex.Code);
     }
 
     [Fact]
@@ -153,7 +156,8 @@ public class TagServiceTests
         _tagRepoMock.Setup(r => r.GetByIdForUpdateAsync(tag.Id)).ReturnsAsync(tag);
         _tagRepoMock.Setup(r => r.HasCoursesAsync(tag.Id)).ReturnsAsync(true);
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.DeleteAsync(tag.Id, 2));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.DeleteAsync(tag.Id, 2));
+        Assert.Equal(ErrorCodes.TagInUse, ex.Code);
 
         _tagRepoMock.Verify(
             r => r.DeleteWithConcurrencyCheckAsync(It.IsAny<Tag>(), It.IsAny<uint>()),
@@ -181,8 +185,9 @@ public class TagServiceTests
         _tagRepoMock.Setup(r => r.HasCoursesAsync(tag.Id)).ReturnsAsync(false);
         _tagRepoMock
             .Setup(r => r.DeleteWithConcurrencyCheckAsync(tag, 1u))
-            .ThrowsAsync(new ConflictException("stale"));
+            .ThrowsAsync(new ConflictException("stale", ErrorCodes.TagRowVersionMismatch));
 
-        await Assert.ThrowsAsync<ConflictException>(() => _sut.DeleteAsync(tag.Id, 1));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => _sut.DeleteAsync(tag.Id, 1));
+        Assert.Equal(ErrorCodes.TagRowVersionMismatch, ex.Code);
     }
 }
