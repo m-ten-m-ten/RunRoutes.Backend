@@ -17,7 +17,7 @@ public class TagService(ITagRepository tagRepository) : ITagService
         var name = NormalizeName(request.Name);
 
         if (await _tagRepository.ExistsByNameAsync(name))
-            throw new ConflictException("同名のタグが既に存在します");
+            throw new ConflictException("同名のタグが既に存在します", ErrorCodes.TagNameDuplicate);
 
         var tag = new Tag
         {
@@ -41,7 +41,7 @@ public class TagService(ITagRepository tagRepository) : ITagService
         if (!string.Equals(tag.Name, name, StringComparison.Ordinal))
         {
             if (await _tagRepository.ExistsByNameAsync(name, id))
-                throw new ConflictException("同名のタグが既に存在します");
+                throw new ConflictException("同名のタグが既に存在します", ErrorCodes.TagNameDuplicate);
             tag.Name = name;
         }
 
@@ -56,7 +56,7 @@ public class TagService(ITagRepository tagRepository) : ITagService
             ?? throw new NotFoundException("タグが見つかりません");
 
         if (await _tagRepository.HasCoursesAsync(id))
-            throw new ConflictException("このタグは既存コースで使用中のため削除できません");
+            throw new ConflictException("このタグは既存コースで使用中のため削除できません", ErrorCodes.TagInUse);
 
         await _tagRepository.DeleteWithConcurrencyCheckAsync(tag, rowVersion);
     }
