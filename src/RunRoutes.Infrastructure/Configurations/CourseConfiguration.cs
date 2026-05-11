@@ -12,6 +12,7 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.ToTable("courses");
 
         builder.HasKey(c => c.Id);
+        builder.Ignore(c => c.DomainEvents);
         builder.Property(c => c.Id).HasColumnName("id");
         builder.Property(c => c.UserId).HasColumnName("user_id");
         builder.Property(c => c.Title).HasColumnName("title");

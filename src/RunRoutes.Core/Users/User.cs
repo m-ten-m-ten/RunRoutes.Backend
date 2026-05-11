@@ -1,8 +1,9 @@
+using RunRoutes.Core.Common;
 using RunRoutes.Core.Courses;
 
 namespace RunRoutes.Core.Users;
 
-public class User
+public class User : AggregateRoot
 {
     public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
