@@ -1,12 +1,9 @@
 using Microsoft.Extensions.Options;
 using Moq;
-using RunRoutes.Core.DTOs.Auth;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Interfaces.Services;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Settings;
+using RunRoutes.Core.Users;
+using RunRoutes.Core.Users.Dtos;
 
 namespace RunRoutes.Core.Tests;
 

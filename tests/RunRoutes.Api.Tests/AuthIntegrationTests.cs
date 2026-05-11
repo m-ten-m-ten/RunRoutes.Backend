@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using RunRoutes.Core.Entities;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;

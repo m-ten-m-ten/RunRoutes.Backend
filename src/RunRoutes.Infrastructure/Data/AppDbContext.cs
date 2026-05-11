@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using RunRoutes.Core.Entities;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Users;
 
 namespace RunRoutes.Infrastructure.Data;
 

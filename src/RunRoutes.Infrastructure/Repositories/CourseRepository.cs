@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Courses;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Interfaces.Repositories;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Tags;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Infrastructure.Repositories;

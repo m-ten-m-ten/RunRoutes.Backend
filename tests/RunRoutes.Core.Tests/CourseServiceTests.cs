@@ -1,11 +1,9 @@
 using Moq;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Common;
-using RunRoutes.Core.DTOs.Courses;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests;
 

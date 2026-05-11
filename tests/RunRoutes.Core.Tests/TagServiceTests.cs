@@ -1,9 +1,7 @@
 using Moq;
-using RunRoutes.Core.DTOs.Tags;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tags.Dtos;
 
 namespace RunRoutes.Core.Tests;
 

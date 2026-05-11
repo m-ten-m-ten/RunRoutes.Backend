@@ -3,10 +3,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Common;
-using RunRoutes.Core.DTOs.Tags;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tags.Dtos;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;
