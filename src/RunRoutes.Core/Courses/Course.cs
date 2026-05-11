@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
+using RunRoutes.Core.Common;
+using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
-using RunRoutes.Core.Common.Exceptions;
 
 namespace RunRoutes.Core.Courses;
 
-public class Course
+public class Course : AggregateRoot
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
