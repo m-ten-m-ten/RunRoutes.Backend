@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RunRoutes.Api.Extensions;
-using RunRoutes.Core.DTOs.Courses;
-using RunRoutes.Core.Interfaces.Services;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Dtos;
 
 namespace RunRoutes.Api.Controllers;
 

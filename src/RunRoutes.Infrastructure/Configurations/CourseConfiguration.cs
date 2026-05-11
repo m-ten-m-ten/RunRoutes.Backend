@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RunRoutes.Core.Entities;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tags;
 
 namespace RunRoutes.Infrastructure.Configurations;
 

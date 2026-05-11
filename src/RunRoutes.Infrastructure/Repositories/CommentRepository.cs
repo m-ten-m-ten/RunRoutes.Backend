@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Interfaces.Repositories;
+using RunRoutes.Core.Courses;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Infrastructure.Repositories;

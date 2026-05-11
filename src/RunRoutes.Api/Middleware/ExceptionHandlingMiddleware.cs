@@ -1,6 +1,5 @@
 using System.Text.Json;
-using RunRoutes.Core.DTOs.Common;
-using RunRoutes.Core.Exceptions;
+using RunRoutes.Core.Common.Exceptions;
 
 namespace RunRoutes.Api.Middleware;
 

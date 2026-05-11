@@ -1,6 +1,6 @@
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Interfaces.Services;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Repositories;
 using RunRoutes.Infrastructure.Services;
 

@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using RunRoutes.Core.Entities;
 using RunRoutes.Core.Settings;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 using RunRoutes.Infrastructure.Services;
 

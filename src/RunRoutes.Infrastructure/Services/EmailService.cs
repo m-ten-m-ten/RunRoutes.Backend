@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Resend;
-using RunRoutes.Core.Interfaces.Services;
 using RunRoutes.Core.Settings;
+using RunRoutes.Core.Users;
 
 namespace RunRoutes.Infrastructure.Services;
 

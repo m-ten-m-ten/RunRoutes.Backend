@@ -25,7 +25,7 @@ namespace RunRoutes.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Comment", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Comment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,7 +62,7 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("comments", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -115,7 +115,7 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("courses", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Tag", b =>
+            modelBuilder.Entity("RunRoutes.Core.Tags.Tag", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -145,7 +145,7 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("tags", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.User", b =>
+            modelBuilder.Entity("RunRoutes.Core.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -239,15 +239,15 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("course_tags", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Comment", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Comment", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.Course", "Course")
+                    b.HasOne("RunRoutes.Core.Courses.Course", "Course")
                         .WithMany("Comments")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RunRoutes.Core.Entities.User", "User")
+                    b.HasOne("RunRoutes.Core.Users.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -258,9 +258,9 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.User", "User")
+                    b.HasOne("RunRoutes.Core.Users.User", "User")
                         .WithMany("Courses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -271,25 +271,25 @@ namespace RunRoutes.Infrastructure.Migrations
 
             modelBuilder.Entity("course_tags", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.Course", null)
+                    b.HasOne("RunRoutes.Core.Courses.Course", null)
                         .WithMany()
                         .HasForeignKey("course_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RunRoutes.Core.Entities.Tag", null)
+                    b.HasOne("RunRoutes.Core.Tags.Tag", null)
                         .WithMany()
                         .HasForeignKey("tag_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
                     b.Navigation("Comments");
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.User", b =>
+            modelBuilder.Entity("RunRoutes.Core.Users.User", b =>
                 {
                     b.Navigation("Comments");
 
