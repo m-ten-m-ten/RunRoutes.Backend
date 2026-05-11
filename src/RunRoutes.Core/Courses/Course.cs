@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
+using RunRoutes.Core.Common.Exceptions;
 
 namespace RunRoutes.Core.Courses;
 
@@ -24,4 +25,43 @@ public class Course
 
     [NotMapped]
     public int CommentCount { get; set; }
+
+    public Comment AddComment(Guid authorId, string body)
+    {
+        var now = DateTime.UtcNow;
+        var comment = new Comment
+        {
+            Id = Guid.NewGuid(),
+            CourseId = this.Id,
+            UserId = authorId,
+            Body = body,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        Comments.Add(comment);
+        return comment;
+    }
+
+    public Comment EditComment(Guid commentId, Guid editorId, string newBody)
+    {
+        var comment = Comments.FirstOrDefault(c => c.Id == commentId)
+            ?? throw new NotFoundException("コメントが見つかりません");
+
+        if (comment.UserId != editorId)
+            throw new ForbiddenException("このコメントを編集する権限がありません");
+
+        comment.UpdateBody(newBody);
+        return comment;
+    }
+
+    public void RemoveComment(Guid commentId, Guid removerId)
+    {
+        var comment = Comments.FirstOrDefault(c => c.Id == commentId)
+            ?? throw new NotFoundException("コメントが見つかりません");
+
+        if (comment.UserId != removerId)
+            throw new ForbiddenException("このコメントを削除する権限がありません");
+
+        Comments.Remove(comment);
+    }
 }

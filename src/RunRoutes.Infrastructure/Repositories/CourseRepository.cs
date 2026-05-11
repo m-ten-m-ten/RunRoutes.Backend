@@ -73,6 +73,19 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 User = c.User,
                 Tags = c.Tags.ToList(),
                 CommentCount = c.Comments.Count,
+                Comments = c.Comments
+                    .OrderBy(cm => cm.CreatedAt)
+                    .Select(cm => new Comment
+                    {
+                        Id = cm.Id,
+                        CourseId = cm.CourseId,
+                        UserId = cm.UserId,
+                        Body = cm.Body,
+                        CreatedAt = cm.CreatedAt,
+                        UpdatedAt = cm.UpdatedAt,
+                        User = cm.User,
+                    })
+                    .ToList(),
             })
             .FirstOrDefaultAsync();
 
@@ -80,6 +93,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
         db.Courses
             .Include(c => c.User)
             .Include(c => c.Tags)
+            .Include(c => c.Comments).ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.Id == id);
 
     public Task<bool> ExistsByIdAsync(Guid id) =>

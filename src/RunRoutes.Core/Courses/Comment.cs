@@ -13,4 +13,10 @@ public class Comment
 
     public Course Course { get; set; } = null!;
     public User User { get; set; } = null!;
+
+    public void UpdateBody(string newBody)
+    {
+        Body = newBody;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
