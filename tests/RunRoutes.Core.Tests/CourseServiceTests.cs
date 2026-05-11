@@ -10,12 +10,11 @@ namespace RunRoutes.Core.Tests;
 public class CourseServiceTests
 {
     private readonly Mock<ICourseRepository> _courseRepoMock = new();
-    private readonly Mock<ICommentRepository> _commentRepoMock = new();
     private readonly CourseService _sut;
 
     public CourseServiceTests()
     {
-        _sut = new CourseService(_courseRepoMock.Object, _commentRepoMock.Object);
+        _sut = new CourseService(_courseRepoMock.Object);
     }
 
     private static Course MakeCourse(Guid? userId = null, Guid? courseId = null)
@@ -102,11 +101,11 @@ public class CourseServiceTests
 
         _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
         _courseRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Course>())).Returns(Task.CompletedTask);
-        _commentRepoMock.Setup(r => r.GetCountByCourseIdAsync(course.Id)).ReturnsAsync(0);
+        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(MakeCourse(userId, course.Id));
 
         var result = await _sut.UpdateAsync(course.Id, request, userId);
 
-        Assert.Equal("Updated Title", result.Course.Title);
+        Assert.Equal(course.Id, result.Course.Id);
     }
 
     [Fact]

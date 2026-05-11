@@ -5,66 +5,45 @@ using RunRoutes.Core.Users.Dtos;
 
 namespace RunRoutes.Core.Courses;
 
-public class CommentService(ICommentRepository commentRepository, ICourseRepository courseRepository) : ICommentService
+public class CommentService(ICourseRepository courseRepository) : ICommentService
 {
-    private readonly ICommentRepository _commentRepository = commentRepository;
     private readonly ICourseRepository _courseRepository = courseRepository;
 
     public async Task<GetCommentsResponse> GetByCourseIdAsync(Guid courseId)
     {
-        var comments = await _commentRepository.GetByCourseIdAsync(courseId);
-        return new GetCommentsResponse(comments.Select(ToCommentDto));
+        var course = await _courseRepository.GetByIdAsync(courseId)
+            ?? throw new NotFoundException("コースが見つかりません");
+        return new GetCommentsResponse(course.Comments.Select(ToCommentDto));
     }
 
     public async Task<CreateCommentResponse> CreateAsync(Guid courseId, CreateCommentRequest request, Guid userId)
     {
-        if (!await _courseRepository.ExistsByIdAsync(courseId))
-            throw new NotFoundException("コースが見つかりません");
+        var course = await _courseRepository.GetByIdForUpdateAsync(courseId)
+            ?? throw new NotFoundException("コースが見つかりません");
+        var comment = course.AddComment(userId, request.Body);
+        await _courseRepository.UpdateAsync(course);
 
-        var comment = new Comment
-        {
-            Id = Guid.NewGuid(),
-            CourseId = courseId,
-            UserId = userId,
-            Body = request.Body,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
-
-        await _commentRepository.AddAsync(comment);
         return new CreateCommentResponse(ToCommentDto(comment));
     }
 
     public async Task<UpdateCommentResponse> UpdateAsync(Guid courseId, Guid commentId, UpdateCommentRequest request, Guid userId)
     {
-        var comment = await _commentRepository.GetByIdForUpdateAsync(commentId)
+        var course = await _courseRepository.GetByIdForUpdateAsync(courseId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
-        if (comment.CourseId != courseId)
-            throw new NotFoundException("コメントが見つかりません");
+        var comment = course.EditComment(commentId, userId, request.Body);
+        await _courseRepository.UpdateAsync(course);
 
-        if (comment.UserId != userId)
-            throw new ForbiddenException("このコメントを編集する権限がありません");
-
-        comment.Body = request.Body;
-        comment.UpdatedAt = DateTime.UtcNow;
-
-        await _commentRepository.UpdateAsync(comment);
         return new UpdateCommentResponse(ToCommentDto(comment));
     }
 
     public async Task DeleteAsync(Guid courseId, Guid commentId, Guid userId)
     {
-        var comment = await _commentRepository.GetByIdForUpdateAsync(commentId)
+        var course = await _courseRepository.GetByIdForUpdateAsync(courseId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
-        if (comment.CourseId != courseId)
-            throw new NotFoundException("コメントが見つかりません");
-
-        if (comment.UserId != userId)
-            throw new ForbiddenException("このコメントを削除する権限がありません");
-
-        await _commentRepository.DeleteAsync(comment);
+        course.RemoveComment(commentId, userId);
+        await _courseRepository.UpdateAsync(course);
     }
 
     private static CommentDto ToCommentDto(Comment c)

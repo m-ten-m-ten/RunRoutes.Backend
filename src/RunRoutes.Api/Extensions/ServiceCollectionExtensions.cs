@@ -12,7 +12,6 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICourseRepository, CourseRepository>();
-        services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
 
         services.AddScoped<IJwtService, JwtService>();

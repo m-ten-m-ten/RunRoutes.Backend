@@ -6,14 +6,11 @@ using RunRoutes.Core.Users.Dtos;
 
 namespace RunRoutes.Core.Courses;
 
-public class CourseService(
-    ICourseRepository courseRepository,
-    ICommentRepository commentRepository) : ICourseService
+public class CourseService(ICourseRepository courseRepository) : ICourseService
 {
     private static readonly string[] ValidDifficulties = ["easy", "medium", "hard"];
 
     private readonly ICourseRepository _courseRepository = courseRepository;
-    private readonly ICommentRepository _commentRepository = commentRepository;
 
     public async Task<GetCoursesResponse> GetListAsync(GetCoursesQuery query, Guid? currentUserId)
     {
@@ -92,8 +89,9 @@ public class CourseService(
         course.UpdatedAt = DateTime.UtcNow;
         await _courseRepository.UpdateAsync(course);
 
-        course.CommentCount = await _commentRepository.GetCountByCourseIdAsync(id);
-        return new UpdateCourseResponse(ToCourseDetailDto(course));
+        var updated = await _courseRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException("コースが見つかりません");
+        return new UpdateCourseResponse(ToCourseDetailDto(updated));
     }
 
     public async Task DeleteAsync(Guid id, Guid userId)
