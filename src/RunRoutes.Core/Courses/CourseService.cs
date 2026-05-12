@@ -8,8 +8,6 @@ namespace RunRoutes.Core.Courses;
 
 public class CourseService(ICourseRepository courseRepository) : ICourseService
 {
-    private static readonly string[] ValidDifficulties = ["easy", "medium", "hard"];
-
     private readonly ICourseRepository _courseRepository = courseRepository;
 
     public async Task<GetCoursesResponse> GetListAsync(GetCoursesQuery query, Guid? currentUserId)
@@ -32,7 +30,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
 
     public async Task<CreateCourseResponse> CreateAsync(CreateCourseRequest request, Guid userId)
     {
-        ValidateDifficulty(request.Difficulty);
+        var difficulty = ParseDifficulty(request.Difficulty);
         var route = ResolveRoute(request.Route, request.GpxXml);
         var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds ?? []);
 
@@ -42,9 +40,9 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
             UserId = userId,
             Title = request.Title,
             Description = request.Description,
-            Difficulty = request.Difficulty,
+            Difficulty = difficulty,
             Route = route,
-            DistanceM = CalculateDistance(route),
+            Distance = Distance.FromMeters(CalculateDistance(route)),
             IsPublic = request.IsPublic,
             Tags = tags.ToList(),
             CreatedAt = DateTime.UtcNow,
@@ -65,19 +63,20 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         if (course.UserId != userId)
             throw new ForbiddenException("このコースを編集する権限がありません");
 
+        Difficulty? parsedDifficulty = null;
         if (request.Difficulty is not null)
-            ValidateDifficulty(request.Difficulty);
+            parsedDifficulty = ParseDifficulty(request.Difficulty);
 
         if (request.Title is not null) course.Title = request.Title;
         if (request.Description is not null) course.Description = request.Description;
-        if (request.Difficulty is not null) course.Difficulty = request.Difficulty;
+        if (parsedDifficulty is not null) course.Difficulty = parsedDifficulty.Value;
         if (request.IsPublic is not null) course.IsPublic = request.IsPublic.Value;
 
         if (request.Route is not null || request.GpxXml is not null)
         {
             var route = ResolveRoute(request.Route, request.GpxXml);
             course.Route = route;
-            course.DistanceM = CalculateDistance(route);
+            course.Distance = Distance.FromMeters(CalculateDistance(route));
         }
 
         if (request.TagIds is not null)
@@ -105,13 +104,15 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         await _courseRepository.DeleteAsync(course);
     }
 
-    private static void ValidateDifficulty(string difficulty)
+    private static Difficulty ParseDifficulty(string difficulty)
     {
-        if (!ValidDifficulties.Contains(difficulty))
+        if (!Enum.TryParse<Difficulty>(difficulty, ignoreCase: true, out var result)
+            || !Enum.IsDefined(typeof(Difficulty), result))
             throw new ValidationException(new Dictionary<string, string[]>
             {
                 ["difficulty"] = ["easy, medium, hard のいずれかを指定してください"]
             });
+        return result;
     }
 
     private static LineString ResolveRoute(GeoJsonLineStringDto? geoJson, string? gpxXml)
@@ -153,7 +154,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
     }
 
     private static CourseListItemDto ToCourseListItemDto(Course c) => new(
-        c.Id, c.Title, c.Difficulty, c.DistanceM, c.IsPublic,
+        c.Id, c.Title, c.Difficulty.ToString().ToLowerInvariant(), c.Distance.Meters, c.IsPublic,
         new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
         c.CommentCount,
@@ -161,7 +162,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
     );
 
     private static CourseDetailDto ToCourseDetailDto(Course c) => new(
-        c.Id, c.Title, c.Description, c.Difficulty, c.DistanceM, c.IsPublic,
+        c.Id, c.Title, c.Description, c.Difficulty.ToString().ToLowerInvariant(), c.Distance.Meters, c.IsPublic,
         new GeoJsonLineStringDto("LineString", c.Route.Coordinates.Select(coord => new[] { coord.X, coord.Y })),
         new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),

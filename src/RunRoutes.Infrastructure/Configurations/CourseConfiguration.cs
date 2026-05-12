@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Tags;
+using RunRoutes.Infrastructure.Configurations.Converters;
 
 namespace RunRoutes.Infrastructure.Configurations;
 
@@ -17,10 +18,10 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
         builder.Property(c => c.UserId).HasColumnName("user_id");
         builder.Property(c => c.Title).HasColumnName("title");
         builder.Property(c => c.Description).HasColumnName("description");
-        builder.Property(c => c.Difficulty).HasColumnName("difficulty");
+        builder.Property(c => c.Difficulty).HasColumnName("difficulty").HasConversion(new DifficultyConverter());
         builder.Property(c => c.Route).HasColumnName("route")
             .HasColumnType("geometry(LineString,4326)");
-        builder.Property(c => c.DistanceM).HasColumnName("distance_m");
+        builder.Property(c => c.Distance).HasColumnName("distance_m").HasConversion(new DistanceConverter());
         builder.Property(c => c.IsPublic).HasColumnName("is_public");
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
         builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");

@@ -13,9 +13,9 @@ public class Course : AggregateRoot
     public Guid UserId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string Difficulty { get; set; } = string.Empty;
+    public Difficulty Difficulty { get; set; }
     public LineString Route { get; set; } = null!;
-    public double DistanceM { get; set; }
+    public Distance Distance { get; set; } = null!;
     public bool IsPublic { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

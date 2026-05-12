@@ -16,7 +16,13 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
             .Where(c => c.IsPublic || c.UserId == currentUserId);
 
         if (query.Difficulty is not null)
-            q = q.Where(c => c.Difficulty == query.Difficulty);
+        {
+            if (Enum.TryParse<Difficulty>(query.Difficulty, ignoreCase: true, out var parsedDifficulty)
+                && Enum.IsDefined(typeof(Difficulty), parsedDifficulty))
+                q = q.Where(c => c.Difficulty == parsedDifficulty);
+            else
+                q = q.Where(c => false);
+        }
 
         if (query.TagIds is not null && query.TagIds.Any())
             q = q.Where(c => c.Tags.Any(t => query.TagIds.Contains(t.Id)));
@@ -41,7 +47,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 Description = c.Description,
                 Difficulty = c.Difficulty,
                 Route = c.Route,
-                DistanceM = c.DistanceM,
+                Distance = c.Distance,
                 IsPublic = c.IsPublic,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
@@ -66,7 +72,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 Description = c.Description,
                 Difficulty = c.Difficulty,
                 Route = c.Route,
-                DistanceM = c.DistanceM,
+                Distance = c.Distance,
                 IsPublic = c.IsPublic,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
