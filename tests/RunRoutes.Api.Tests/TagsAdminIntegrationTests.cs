@@ -237,12 +237,12 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
             Id = Guid.NewGuid(),
             UserId = admin.Id,
             Title = "sample",
-            Difficulty = "easy",
+            Difficulty = Difficulty.Easy,
             Route = new LineString([new Coordinate(139.0, 35.0), new Coordinate(139.1, 35.1)])
             {
                 SRID = 4326,
             },
-            DistanceM = 100.0,
+            Distance = Distance.FromMeters(100.0),
             IsPublic = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
