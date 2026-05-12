@@ -232,25 +232,23 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
         var admin = db.Users.First(u => u.Email == AdminEmail);
         var tag = db.Tags.First(t => t.Id == tagId);
 
-        var course = new Course
-        {
-            Id = Guid.NewGuid(),
-            UserId = admin.Id,
-            Title = "sample",
-            Difficulty = Difficulty.Easy,
-            Route = new LineString([new Coordinate(139.0, 35.0), new Coordinate(139.1, 35.1)])
-            {
-                SRID = 4326,
-            },
-            Distance = Distance.FromMeters(100.0),
-            IsPublic = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Tags = [tag],
-        };
+        var course = Course.Create(
+            userId: admin.Id,
+            title: "sample",
+            description: null,
+            difficulty: Difficulty.Easy,
+            route: new LineString([new Coordinate(139.0, 35.0), new Coordinate(139.1, 35.1)]) { SRID = 4326 },
+            isPublic: true,
+            tags: [tag]);
+
         db.Courses.Add(course);
         db.SaveChanges();
     }
 
     private record LoginResult(string AccessToken);
+
+    private static void SetPrivate<T>(T target, string propertyName, object value) where T : class
+    {
+        typeof(T).GetProperty(propertyName)!.SetValue(target, value);
+    }
 }
