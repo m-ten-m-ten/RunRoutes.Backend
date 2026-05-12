@@ -4,6 +4,7 @@ using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Dtos;
 using RunRoutes.Core.Tags;
 using RunRoutes.Infrastructure.Data;
+using RunRoutes.Infrastructure.Repositories.Projections;
 
 namespace RunRoutes.Infrastructure.Repositories;
 
@@ -35,11 +36,11 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
 
         var totalCount = await q.CountAsync();
 
-        var courses = await q
+        var projections = await q
             .OrderByDescending(c => c.CreatedAt)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(c => new Course
+            .Select(c => new CourseProjection
             {
                 Id = c.Id,
                 UserId = c.UserId,
@@ -54,17 +55,20 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 User = c.User,
                 Tags = c.Tags.ToList(),
                 CommentCount = c.Comments.Count,
+                // 一覧では Comments は不要なので空
             })
             .ToListAsync();
 
+        var courses = projections.Select(p => p.ToDomain()).ToList();
         return (courses, totalCount);
     }
 
-    public Task<Course?> GetByIdAsync(Guid id) =>
-        db.Courses
+    public async Task<Course?> GetByIdAsync(Guid id)
+    {
+        var projection = await db.Courses
             .AsNoTracking()
             .Where(c => c.Id == id)
-            .Select(c => new Course
+            .Select(c => new CourseProjection
             {
                 Id = c.Id,
                 UserId = c.UserId,
@@ -81,7 +85,7 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 CommentCount = c.Comments.Count,
                 Comments = c.Comments
                     .OrderBy(cm => cm.CreatedAt)
-                    .Select(cm => new Comment
+                    .Select(cm => new CommentProjection
                     {
                         Id = cm.Id,
                         CourseId = cm.CourseId,
@@ -94,6 +98,9 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                     .ToList(),
             })
             .FirstOrDefaultAsync();
+
+        return projection?.ToDomain();
+    }
 
     public Task<Course?> GetByIdForUpdateAsync(Guid id) =>
         db.Courses

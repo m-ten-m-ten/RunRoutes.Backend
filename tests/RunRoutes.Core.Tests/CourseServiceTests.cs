@@ -20,21 +20,27 @@ public class CourseServiceTests
     private static Course MakeCourse(Guid? userId = null, Guid? courseId = null)
     {
         var uid = userId ?? Guid.NewGuid();
-        return new Course
-        {
-            Id = courseId ?? Guid.NewGuid(),
-            UserId = uid,
-            Title = "Test Course",
-            Difficulty = Difficulty.Easy,
-            Route = new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
-            Distance = Distance.FromMeters(1000),
-            IsPublic = true,
-            User = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow },
-            Tags = [],
-            Comments = [],
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var course = Course.Create(
+            userId: uid,
+            title: "Test Course",
+            description: null,
+            difficulty: Difficulty.Easy,
+            route: new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
+            isPublic: true,
+            tags: []);
+
+        if (courseId is not null)
+            SetPrivate(course, nameof(Course.Id), courseId.Value);
+
+        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+        SetPrivate(course, nameof(Course.User), user);
+
+        return course;
+    }
+
+    private static void SetPrivate<T>(T target, string propertyName, object value) where T : class
+    {
+        typeof(T).GetProperty(propertyName)!.SetValue(target, value);
     }
 
     [Fact]

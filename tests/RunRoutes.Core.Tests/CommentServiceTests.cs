@@ -20,34 +20,43 @@ public class CommentServiceTests
     public static Course MakeCourse(Guid? courseId = null, Guid? ownerId = null, List<Comment>? comments = null)
     {
         var uid = ownerId ?? Guid.NewGuid();
-        return new Course
-        {
-            Id = courseId ?? Guid.NewGuid(),
-            UserId = uid,
-            Title = "Test Course",
-            Difficulty = Difficulty.Easy,
-            Route = new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
-            Distance = Distance.FromMeters(1000),
-            IsPublic = true,
-            User = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow },
-            Tags = [],
-            Comments = comments ?? [],
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var course = Course.Create(
+            userId: uid,
+            title: "Test Course",
+            description: null,
+            difficulty: Difficulty.Easy,
+            route: new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
+            isPublic: true,
+            tags: []);
+
+        if (courseId is not null)
+            SetPrivate(course, nameof(Course.Id), courseId.Value);
+
+        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+        SetPrivate(course, nameof(Course.User), user);
+
+        if (comments is not null)
+            SetPrivate(course, nameof(Course.Comments), comments);
+
+        return course;
+    }
+
+    private static void SetPrivate<T>(T target, string propertyName, object value) where T : class
+    {
+        typeof(T).GetProperty(propertyName)!.SetValue(target, value);
     }
 
     private static Comment MakeComment(Guid? userId = null, Guid? courseId = null, Guid? commentId = null)
     {
-        return new Comment
-        {
-            Id = commentId ?? Guid.NewGuid(),
-            CourseId = courseId ?? Guid.NewGuid(),
-            UserId = userId ?? Guid.NewGuid(),
-            Body = "Test comment",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var comment = Comment.Create(
+            courseId: courseId ?? Guid.NewGuid(),
+            userId: userId ?? Guid.NewGuid(),
+            body: "Test comment");
+
+        if (commentId is not null)
+            SetPrivate(comment, nameof(Comment.Id), commentId.Value);
+
+        return comment;
     }
 
     [Fact]
