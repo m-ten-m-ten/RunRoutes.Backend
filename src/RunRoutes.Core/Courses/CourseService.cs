@@ -34,20 +34,14 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         var route = ResolveRoute(request.Route, request.GpxXml);
         var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds ?? []);
 
-        var course = new Course
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Title = request.Title,
-            Description = request.Description,
-            Difficulty = difficulty,
-            Route = route,
-            Distance = Distance.FromMeters(CalculateDistance(route)),
-            IsPublic = request.IsPublic,
-            Tags = tags.ToList(),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var course = Course.Create(
+        userId: userId,
+        title: request.Title,
+        description: request.Description,
+        difficulty: difficulty,
+        route: route,
+        isPublic: request.IsPublic,
+        tags: tags);
 
         await _courseRepository.AddAsync(course);
         var created = await _courseRepository.GetByIdAsync(course.Id)
@@ -63,29 +57,32 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         if (course.UserId != userId)
             throw new ForbiddenException("このコースを編集する権限がありません");
 
-        Difficulty? parsedDifficulty = null;
-        if (request.Difficulty is not null)
-            parsedDifficulty = ParseDifficulty(request.Difficulty);
+        if (request.Title is not null)
+            course.UpdateTitle(request.Title);
 
-        if (request.Title is not null) course.Title = request.Title;
-        if (request.Description is not null) course.Description = request.Description;
-        if (parsedDifficulty is not null) course.Difficulty = parsedDifficulty.Value;
-        if (request.IsPublic is not null) course.IsPublic = request.IsPublic.Value;
+        if (request.Description is not null)
+            course.UpdateDescription(request.Description);
+
+        if (request.Difficulty is not null)
+            course.ChangeDifficulty(ParseDifficulty(request.Difficulty));
+
+        if (request.IsPublic is not null)
+        {
+            if (request.IsPublic.Value) course.Publish();
+            else course.Unpublish();
+        }
 
         if (request.Route is not null || request.GpxXml is not null)
         {
             var route = ResolveRoute(request.Route, request.GpxXml);
-            course.Route = route;
-            course.Distance = Distance.FromMeters(CalculateDistance(route));
+            course.ChangeRoute(route);
         }
 
         if (request.TagIds is not null)
         {
             var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds);
-            course.Tags = tags.ToList();
+            course.ReplaceTags(tags);
         }
-
-        course.UpdatedAt = DateTime.UtcNow;
         await _courseRepository.UpdateAsync(course);
 
         var updated = await _courseRepository.GetByIdAsync(id)
@@ -129,28 +126,6 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
             return GpxParser.Parse(gpxXml);
 
         throw new ValidationException("route または gpxXml のいずれかを指定してください");
-    }
-
-    private static double CalculateDistance(LineString route)
-    {
-        double total = 0;
-        for (int i = 0; i < route.Coordinates.Length - 1; i++)
-        {
-            total += HaversineDistance(route.Coordinates[i], route.Coordinates[i + 1]);
-        }
-        return total;
-    }
-
-    private static double HaversineDistance(Coordinate a, Coordinate b)
-    {
-        const double R = 6371000;
-        var lat1 = a.Y * Math.PI / 180;
-        var lat2 = b.Y * Math.PI / 180;
-        var dLat = (b.Y - a.Y) * Math.PI / 180;
-        var dLon = (b.X - a.X) * Math.PI / 180;
-        var h = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
-            + Math.Cos(lat1) * Math.Cos(lat2) * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-        return R * 2 * Math.Atan2(Math.Sqrt(h), Math.Sqrt(1 - h));
     }
 
     private static CourseListItemDto ToCourseListItemDto(Course c) => new(
