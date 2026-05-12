@@ -1,5 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="RunRoutes.Infrastructure" />
+    <InternalsVisibleTo Include="RunRoutes.Core.Tests" />
+    <InternalsVisibleTo Include="RunRoutes.Api.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
