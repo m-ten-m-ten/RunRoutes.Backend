@@ -20,6 +20,35 @@ public class CommentServiceTests
     public static Course MakeCourse(Guid? courseId = null, Guid? ownerId = null, List<Comment>? comments = null)
     {
         var uid = ownerId ?? Guid.NewGuid();
+        var cid = courseId ?? Guid.NewGuid();
+        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+
+        // comments を持つテスト用 Course は Reconstruct 経由で組み立てる(論点 B-3)
+        if (comments is not null)
+        {
+            // ダミーの Route / Distance を用意(テストでは Route の中身は使わない)
+            var route = new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 };
+            var distance = Distance.FromMeters(100);
+            var now = DateTime.UtcNow;
+
+            return Course.Reconstruct(
+                id: cid,
+                userId: uid,
+                title: "Test Course",
+                description: null,
+                difficulty: Difficulty.Easy,
+                route: route,
+                distance: distance,
+                isPublic: true,
+                createdAt: now,
+                updatedAt: now,
+                user: user,
+                comments: comments,
+                tags: [],
+                commentCount: comments.Count);
+        }
+
+        // 通常の(comments を持たない)テストは Create 経由で組み立てる
         var course = Course.Create(
             userId: uid,
             title: "Test Course",
@@ -32,11 +61,7 @@ public class CommentServiceTests
         if (courseId is not null)
             SetPrivate(course, nameof(Course.Id), courseId.Value);
 
-        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
         SetPrivate(course, nameof(Course.User), user);
-
-        if (comments is not null)
-            SetPrivate(course, nameof(Course.Comments), comments);
 
         return course;
     }

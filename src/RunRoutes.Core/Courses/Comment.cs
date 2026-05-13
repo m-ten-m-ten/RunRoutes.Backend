@@ -12,10 +12,12 @@ public class Comment
     public Guid UserId { get; private set; }
     public string Body { get; private set; } = string.Empty;
     public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; private set; }
 
     public Course Course { get; private set; } = null!;
     public User User { get; private set; } = null!;
+
+    public bool IsEdited => UpdatedAt is not null;
 
     public static Comment Create(Guid courseId, Guid userId, string body)
     {
@@ -30,7 +32,7 @@ public class Comment
             UserId = userId,
             Body = body,
             CreatedAt = now,
-            UpdatedAt = now,
+            UpdatedAt = null,
         };
     }
 
@@ -40,7 +42,7 @@ public class Comment
         Guid userId,
         string body,
         DateTime createdAt,
-        DateTime updatedAt,
+        DateTime? updatedAt,
         User? user)
     {
         return new Comment

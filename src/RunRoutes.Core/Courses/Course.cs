@@ -24,8 +24,10 @@ public class Course : AggregateRoot
     public DateTime UpdatedAt { get; private set; }
 
     public User User { get; private set; } = null!;
-    public ICollection<Comment> Comments { get; private set; } = [];
-    public ICollection<Tag> Tags { get; private set; } = [];
+    private readonly List<Comment> _comments = [];
+    public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+    private readonly List<Tag> _tags = [];
+    public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
     [NotMapped]
     public int CommentCount { get; private set; }
@@ -48,7 +50,7 @@ public class Course : AggregateRoot
             throw new ValidationException("ルートには2点以上の座標が必要です");
 
         var now = DateTime.UtcNow;
-        return new Course
+        var course = new Course
         {
             Id = Guid.NewGuid(),
             UserId = userId,
@@ -58,13 +60,12 @@ public class Course : AggregateRoot
             Route = route,
             Distance = CalculateDistance(route),
             IsPublic = isPublic,
-            Tags = tags.ToList(),
-            Comments = [],
             CreatedAt = now,
             UpdatedAt = now,
         };
+        course._tags.AddRange(tags);
+        return course;
     }
-
 
     // ========================================
     // 再構成メソッド(EF Core / Repository から)
@@ -85,7 +86,7 @@ public class Course : AggregateRoot
         IEnumerable<Tag> tags,
         int commentCount)
     {
-        return new Course
+        var course = new Course
         {
             Id = id,
             UserId = userId,
@@ -98,10 +99,11 @@ public class Course : AggregateRoot
             CreatedAt = createdAt,
             UpdatedAt = updatedAt,
             User = user,
-            Comments = comments.ToList(),
-            Tags = tags.ToList(),
             CommentCount = commentCount,
         };
+        course._tags.AddRange(tags);
+        course._comments.AddRange(comments);
+        return course;
     }
 
     // ========================================
@@ -150,7 +152,8 @@ public class Course : AggregateRoot
 
     public void ReplaceTags(IEnumerable<Tag> newTags)
     {
-        Tags = newTags.ToList();
+        _tags.Clear();
+        _tags.AddRange(newTags);
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -160,13 +163,13 @@ public class Course : AggregateRoot
     public Comment AddComment(Guid authorId, string body)
     {
         var comment = Comment.Create(this.Id, authorId, body);
-        Comments.Add(comment);
+        _comments.Add(comment);
         return comment;
     }
 
     public Comment EditComment(Guid commentId, Guid editorId, string newBody)
     {
-        var comment = Comments.FirstOrDefault(c => c.Id == commentId)
+        var comment = _comments.FirstOrDefault(c => c.Id == commentId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
         if (comment.UserId != editorId)
@@ -178,13 +181,13 @@ public class Course : AggregateRoot
 
     public void RemoveComment(Guid commentId, Guid removerId)
     {
-        var comment = Comments.FirstOrDefault(c => c.Id == commentId)
+        var comment = _comments.FirstOrDefault(c => c.Id == commentId)
             ?? throw new NotFoundException("コメントが見つかりません");
 
         if (comment.UserId != removerId)
             throw new ForbiddenException("このコメントを削除する権限がありません");
 
-        Comments.Remove(comment);
+        _comments.Remove(comment);
     }
 
     // ========================================
