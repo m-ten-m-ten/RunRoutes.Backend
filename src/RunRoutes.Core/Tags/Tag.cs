@@ -85,4 +85,6 @@ public class Tag
 
         return trimmed;
     }
+
+    internal static string NormalizeNameForService(string name) => NormalizeName(name);
 }
