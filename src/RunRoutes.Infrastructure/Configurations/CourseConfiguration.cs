@@ -48,5 +48,14 @@ public class CourseConfiguration : IEntityTypeConfiguration<Course>
                     join.HasKey("course_id", "tag_id");
                 }
             );
+
+        // バッキングフィールドの明示
+        builder.Navigation(c => c.Tags)
+            .HasField("_tags")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(c => c.Comments)
+            .HasField("_comments")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
