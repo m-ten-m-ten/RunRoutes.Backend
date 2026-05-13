@@ -48,10 +48,9 @@ public class CommentService(ICourseRepository courseRepository) : ICommentServic
 
     private static CommentDto ToCommentDto(Comment c)
     {
-        var isEdited = c.UpdatedAt > c.CreatedAt.AddSeconds(1);
         UserDto user = c.User is null
             ? new UserDto(c.UserId, string.Empty, string.Empty, UserRole.User.ToString(), DateTime.MinValue)
             : new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt);
-        return new CommentDto(c.Id, c.Body, user, c.CreatedAt, c.UpdatedAt, isEdited);
+        return new CommentDto(c.Id, c.Body, user, c.CreatedAt, c.UpdatedAt, c.IsEdited);
     }
 }

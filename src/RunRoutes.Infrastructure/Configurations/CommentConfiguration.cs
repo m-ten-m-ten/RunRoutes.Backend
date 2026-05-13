@@ -16,7 +16,7 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         builder.Property(c => c.UserId).HasColumnName("user_id");
         builder.Property(c => c.Body).HasColumnName("body");
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
-        builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(c => c.UpdatedAt).HasColumnName("updated_at").IsRequired(false);
 
         builder.HasOne(c => c.Course)
             .WithMany(course => course.Comments)
