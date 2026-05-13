@@ -53,7 +53,13 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
                 User = c.User,
-                Tags = c.Tags.ToList(),
+                Tags = c.Tags.Select(t => new TagProjection
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CreatedAt = t.CreatedAt,
+                    Version = t.Version,
+                }).ToList(),
                 CommentCount = c.Comments.Count,
                 // 一覧では Comments は不要なので空
             })
@@ -81,7 +87,13 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
                 User = c.User,
-                Tags = c.Tags.ToList(),
+                Tags = c.Tags.Select(t => new TagProjection
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CreatedAt = t.CreatedAt,
+                    Version = t.Version,
+                }).ToList(),
                 CommentCount = c.Comments.Count,
                 Comments = c.Comments
                     .OrderBy(cm => cm.CreatedAt)

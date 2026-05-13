@@ -21,13 +21,13 @@ internal sealed class CourseProjection
     public DateTime UpdatedAt { get; init; }
     public User User { get; init; } = null!;
     public List<CommentProjection> Comments { get; init; } = [];
-    public List<Tag> Tags { get; init; } = [];
+    public List<TagProjection> Tags { get; init; } = [];
     public int CommentCount { get; init; }
 
     public Course ToDomain() => Course.Reconstruct(
         Id, UserId, Title, Description, Difficulty, Route, Distance, IsPublic,
         CreatedAt, UpdatedAt, User,
         Comments.Select(c => c.ToDomain()),
-        Tags,
+        Tags.Select(t => t.ToDomain()),
         CommentCount);
 }
