@@ -1,6 +1,9 @@
+using RunRoutes.Core.Common;
+using RunRoutes.Core.Common.DomainEvents;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
+using RunRoutes.Infrastructure.DomainEvents;
 using RunRoutes.Infrastructure.Repositories;
 using RunRoutes.Infrastructure.Services;
 
@@ -21,6 +24,19 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<AdminRoleSeeder>();
+
+        // ドメインイベント基盤
+        services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+
+        // ICurrentUserService の実装は Api 層にある(HTTP 依存のため)
+        services.AddScoped<ICurrentUserService, Services.CurrentUserService>();
+
+        // ドメインイベントハンドラを Infrastructure アセンブリからスキャン登録
+        services.Scan(scan => scan
+            .FromAssemblyOf<DomainEventDispatcher>()
+            .AddClasses(c => c.AssignableTo(typeof(IDomainEventHandler<>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
 
         return services;
     }
