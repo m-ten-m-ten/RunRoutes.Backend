@@ -1,4 +1,4 @@
-namespace RunRoutes.Core.Common;
+namespace RunRoutes.Core.Common.DomainEvents;
 
 /// <summary>
 /// ドメインイベントを表すマーカーインターフェース。
@@ -6,5 +6,5 @@ namespace RunRoutes.Core.Common;
 /// </summary>
 public interface IDomainEvent
 {
-    DateTimeOffset OccurredAt { get; }
+    DateTime OccurredAt { get; }
 }
