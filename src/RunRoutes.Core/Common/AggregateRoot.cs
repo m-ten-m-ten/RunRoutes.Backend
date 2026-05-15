@@ -1,3 +1,5 @@
+using RunRoutes.Core.Common.DomainEvents;
+
 namespace RunRoutes.Core.Common;
 
 /// <summary>
