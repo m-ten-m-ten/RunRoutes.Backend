@@ -132,7 +132,6 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
 
     public async Task UpdateAsync(Course course)
     {
-        db.Courses.Update(course);
         await db.SaveChangesAsync();
     }
 
