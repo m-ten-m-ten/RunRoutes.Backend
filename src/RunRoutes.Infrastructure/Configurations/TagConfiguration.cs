@@ -11,7 +11,7 @@ public class TagConfiguration : IEntityTypeConfiguration<Tag>
         builder.ToTable("tags");
 
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id).HasColumnName("id");
+        builder.Property(t => t.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(t => t.Name).HasColumnName("name");
         builder.Property(t => t.CreatedAt).HasColumnName("created_at");
         builder.Property(t => t.Version)

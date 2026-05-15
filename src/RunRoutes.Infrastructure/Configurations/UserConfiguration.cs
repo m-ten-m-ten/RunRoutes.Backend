@@ -12,7 +12,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(u => u.Id);
         builder.Ignore(u => u.DomainEvents);
-        builder.Property(u => u.Id).HasColumnName("id");
+        builder.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(u => u.Email).HasColumnName("email");
         builder.Property(u => u.Username).HasColumnName("username");
         builder.Property(u => u.PasswordHash).HasColumnName("password_hash");
