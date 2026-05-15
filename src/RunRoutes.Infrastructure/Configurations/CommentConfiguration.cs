@@ -11,7 +11,7 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         builder.ToTable("comments");
 
         builder.HasKey(c => c.Id);
-        builder.Property(c => c.Id).HasColumnName("id");
+        builder.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(c => c.CourseId).HasColumnName("course_id");
         builder.Property(c => c.UserId).HasColumnName("user_id");
         builder.Property(c => c.Body).HasColumnName("body");

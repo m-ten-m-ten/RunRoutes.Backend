@@ -1,6 +1,7 @@
 using NetTopologySuite.Geometries;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Events;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
 
@@ -149,7 +150,8 @@ public class CourseDomainTests
             new Coordinate(139.0, 35.0),
             new Coordinate(139.5, 35.5),
             new Coordinate(140.0, 36.0),
-        ]) { SRID = 4326 };
+        ])
+        { SRID = 4326 };
 
         course.ChangeRoute(newRoute);
 
@@ -183,6 +185,29 @@ public class CourseDomainTests
         var course = MakeMinimalCourse(isPublic: true);
         course.Unpublish();
         Assert.False(course.IsPublic);
+    }
+
+    [Fact]
+    public void Publish_未公開のコースを公開するとCoursePublishedEventが発火される()
+    {
+        var course = MakeMinimalCourse(isPublic: false);
+
+        course.Publish();
+
+        Assert.Single(course.DomainEvents);
+        var evt = Assert.IsType<CoursePublishedEvent>(course.DomainEvents.First());
+        Assert.Equal(course.Id, evt.CourseId);
+        Assert.Equal(course.UserId, evt.CourseOwnerId);
+    }
+
+    [Fact]
+    public void Publish_既に公開済みのコースをPublishしてもイベントは発火されない()
+    {
+        var course = MakeMinimalCourse(isPublic: true);
+
+        course.Publish();
+
+        Assert.Empty(course.DomainEvents);
     }
 
     // ========================================
@@ -291,6 +316,33 @@ public class CourseDomainTests
         var course = MakeMinimalCourse();
         Assert.Throws<NotFoundException>(() =>
             course.RemoveComment(Guid.NewGuid(), Guid.NewGuid()));
+    }
+
+    [Fact]
+    public void AddComment_コメントを追加するとCommentAddedEventが発火される()
+    {
+        var course = MakeMinimalCourse();
+        var userId = Guid.NewGuid();
+
+        var comment = course.AddComment(userId, "テストコメント");
+
+        Assert.Single(course.DomainEvents);
+        var evt = Assert.IsType<CommentAddedEvent>(course.DomainEvents.First());
+        Assert.Equal(comment.Id, evt.CommentId);
+        Assert.Equal(course.Id, evt.CourseId);
+        Assert.Equal(userId, evt.CommentAuthorId);
+    }
+
+    [Fact]
+    public void ClearDomainEvents_クリア後はDomainEventsが空になる()
+    {
+        var course = MakeMinimalCourse(isPublic: false);
+        course.Publish();
+        Assert.Single(course.DomainEvents);
+
+        course.ClearDomainEvents();
+
+        Assert.Empty(course.DomainEvents);
     }
 
     // ========================================
