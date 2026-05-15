@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
 using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Courses.Events;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
 
@@ -140,8 +141,10 @@ public class Course : AggregateRoot
 
     public void Publish()
     {
+        if (IsPublic) return;
         IsPublic = true;
         UpdatedAt = DateTime.UtcNow;
+        AddDomainEvent(new CoursePublishedEvent(Id, UserId, DateTime.UtcNow));
     }
 
     public void Unpublish()
@@ -164,6 +167,7 @@ public class Course : AggregateRoot
     {
         var comment = Comment.Create(this.Id, authorId, body);
         _comments.Add(comment);
+        AddDomainEvent(new CommentAddedEvent(comment.Id, Id, authorId, DateTime.UtcNow));
         return comment;
     }
 
