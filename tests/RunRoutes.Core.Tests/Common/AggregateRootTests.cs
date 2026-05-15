@@ -1,14 +1,15 @@
 using RunRoutes.Core.Common;
+using RunRoutes.Core.Common.DomainEvents;
 
 namespace RunRoutes.Core.Tests.Common;
 
 public class AggregateRootTests
 {
-    private sealed record TestEvent(DateTimeOffset OccurredAt) : IDomainEvent;
+    private sealed record TestEvent(DateTime OccurredAt) : IDomainEvent;
 
     private sealed class TestAggregate : AggregateRoot
     {
-        public void RaiseTestEvent() => AddDomainEvent(new TestEvent(DateTimeOffset.UtcNow));
+        public void RaiseTestEvent() => AddDomainEvent(new TestEvent(DateTime.UtcNow));
     }
 
     private readonly TestAggregate _sut;
