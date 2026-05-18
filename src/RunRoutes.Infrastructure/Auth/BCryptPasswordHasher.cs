@@ -1,5 +1,7 @@
 using RunRoutes.Core.Users;
 
+namespace RunRoutes.Infrastructure.Auth;
+
 public class BCryptPasswordHasher : IPasswordHasher
 {
     public HashedPassword Hash(PlainPassword plain) =>

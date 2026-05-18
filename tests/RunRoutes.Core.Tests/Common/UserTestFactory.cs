@@ -8,22 +8,19 @@ public static class UserTestFactory
         string email = "test@example.com",
         string username = "testuser",
         string password = "password123",
-        IPasswordHasher? hasher = null,
-        UserRole role = UserRole.User)
+        IPasswordHasher? hasher = null)
     {
         hasher ??= new FakePasswordHasher();
         var now = DateTime.UtcNow;
-        return new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create(email),
-            Username = Username.Create(username),
-            PasswordHash = hasher.Hash(PlainPassword.Create(password)),
-            IsActive = true,
-            CreatedAt = now,
-            UpdatedAt = now,
-            Role = role,
-        };
+        var user = User.Register(
+            EmailAddress.Create(email),
+            Username.Create(username),
+            PlainPassword.Create(password),
+            hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+        return user;
     }
 
     public static User CreateInactive(
@@ -32,8 +29,14 @@ public static class UserTestFactory
         string password = "password123",
         IPasswordHasher? hasher = null)
     {
-        var user = CreateActivated(email, username, password, hasher);
-        user.IsActive = false;
-        return user;
+        hasher ??= new FakePasswordHasher();
+        var now = DateTime.UtcNow;
+        return User.Register(
+            EmailAddress.Create(email),
+            Username.Create(username),
+            PlainPassword.Create(password),
+            hasher,
+            now,
+            TimeSpan.FromHours(24));
     }
 }

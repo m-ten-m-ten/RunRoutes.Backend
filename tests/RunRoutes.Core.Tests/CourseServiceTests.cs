@@ -3,6 +3,7 @@ using NetTopologySuite.Geometries;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests;
@@ -32,7 +33,7 @@ public class CourseServiceTests
         if (courseId is not null)
             SetPrivate(course, nameof(Course.Id), courseId.Value);
 
-        var user = new User { Id = uid, Email = EmailAddress.Create("a@example.com"), Username = Username.Create("user"), CreatedAt = DateTime.UtcNow };
+        var user = UserTestFactory.CreateActivated("a@example.com", "courseuser");
         SetPrivate(course, nameof(Course.User), user);
 
         return course;

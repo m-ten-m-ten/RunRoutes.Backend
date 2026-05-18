@@ -47,8 +47,7 @@ public class AdminRoleSeeder(
         foreach (var user in users)
         {
             if (user.Role == UserRole.Admin) continue;
-            user.Role = UserRole.Admin;
-            user.UpdatedAt = DateTime.UtcNow;
+            user.PromoteToAdmin(DateTime.UtcNow);
             promoted++;
         }
 

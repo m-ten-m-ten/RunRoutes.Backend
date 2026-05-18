@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using RunRoutes.Core.Settings;
@@ -16,17 +15,12 @@ public class AdminRoleSeederTests
             .UseInMemoryDatabase(name)
             .Options);
 
-    private static User MakeUser(string email, UserRole role = UserRole.User) => new()
+    private static User MakeUser(string email, UserRole role = UserRole.User)
     {
-        Id = Guid.NewGuid(),
-        Email = email,
-        Username = email.Split('@')[0],
-        PasswordHash = "x",
-        IsActive = true,
-        Role = role,
-        CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-    };
+        // "user" プレフィックスで予約語 ("admin" 等) を回避
+        var username = $"user{email.Split('@')[0].ToLowerInvariant()}";
+        return TestUserBuilder.CreateActivated(email, username, "password123", role);
+    }
 
     [Fact]
     public async Task 空配列なら何もしない()
@@ -62,9 +56,9 @@ public class AdminRoleSeederTests
         await seeder.RunAsync();
 
         Assert.Equal(UserRole.Admin,
-            (await db.Users.FirstAsync(u => u.Email == "promote@example.com")).Role);
+            (await db.Users.FirstAsync(u => u.Email.Value == "promote@example.com")).Role);
         Assert.Equal(UserRole.User,
-            (await db.Users.FirstAsync(u => u.Email == "other@example.com")).Role);
+            (await db.Users.FirstAsync(u => u.Email.Value == "other@example.com")).Role);
     }
 
     [Fact]

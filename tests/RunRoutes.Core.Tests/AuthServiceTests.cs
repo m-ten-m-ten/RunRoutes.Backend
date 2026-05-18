@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Settings;
+using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 using RunRoutes.Core.Users.Dtos;
 
@@ -24,7 +25,7 @@ public class AuthServiceTests
             AccessTokenExpirationMinutes = 15,
             RefreshTokenExpirationDays = 7
         });
-        _sut = new AuthService(_userRepoMock.Object, _jwtServiceMock.Object, _emailServiceMock.Object, jwtSettings);
+        _sut = new AuthService(_userRepoMock.Object, _jwtServiceMock.Object, _emailServiceMock.Object, new FakePasswordHasher(), jwtSettings);
     }
 
     [Fact]
@@ -44,7 +45,7 @@ public class AuthServiceTests
             u.Email.Value == request.Email &&
             u.Username.Value == request.Username &&
             u.PasswordHash.Value != request.Password &&
-            u.ActivationToken != null &&
+            u.Activation != null &&
             !u.IsActive
         )), Times.Once);
     }
@@ -72,15 +73,7 @@ public class AuthServiceTests
     public async Task Login_正常にトークンが発行される()
     {
         var password = "password123";
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create("test@example.com"),
-            Username = Username.Create("testuser"),
-            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(password)),
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", password, new BCryptTestHasher());
         var request = new LoginRequest(user.Email.Value, password);
 
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(request.Email)).ReturnsAsync(user);
@@ -98,13 +91,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Login_未有効化でValidationException()
     {
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create("inactive@example.com"),
-            IsActive = false,
-            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword("password123"))
-        };
+        var user = UserTestFactory.CreateInactive("inactive@example.com", "inactiveuser");
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
@@ -114,13 +101,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Login_パスワード不一致でValidationException()
     {
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create("test@example.com"),
-            IsActive = true,
-            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword("correct_password"))
-        };
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", "correct_password", new BCryptTestHasher());
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
@@ -141,15 +122,10 @@ public class AuthServiceTests
     [Fact]
     public async Task Refresh_正常に新トークンが発行される()
     {
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create("test@example.com"),
-            Username = Username.Create("testuser"),
-            RefreshToken = "old_refresh",
-            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
-            CreatedAt = DateTime.UtcNow
-        };
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser");
+        user.RefreshToken = "old_refresh";
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+
         _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("old_refresh")).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("new_access_token");
         _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns("new_refresh_token");
@@ -164,13 +140,13 @@ public class AuthServiceTests
     [Fact]
     public async Task Refresh_期限切れトークンでValidationException()
     {
-        var user = new User
-        {
-            RefreshToken = "expired_refresh",
-            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(-1)
-        };
+        var user = UserTestFactory.CreateActivated();
+        user.RefreshToken = "expired_refresh";
+        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(-1);
+
         _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("expired_refresh")).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(() => _sut.RefreshAsync("expired_refresh"));
     }
+
 }

@@ -9,38 +9,32 @@ public class AuthService(
     IUserRepository userRepository,
     IJwtService jwtService,
     IEmailService emailService,
+    IPasswordHasher passwordHasher,
     IOptions<JwtSettings> jwtSettings) : IAuthService
 {
     private readonly IUserRepository _userRepository = userRepository;
     private readonly IJwtService _jwtService = jwtService;
     private readonly IEmailService _emailService = emailService;
+    private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
     public async Task<RegisterResponse> RegisterAsync(RegisterRequest request)
     {
         if (await _userRepository.ExistsByEmailAsync(request.Email))
             throw new ConflictException("このメールアドレスはすでに使用されています");
-
         if (await _userRepository.ExistsByUsernameAsync(request.Username))
             throw new ConflictException("このユーザー名はすでに使用されています");
 
-        var activationToken = Guid.NewGuid().ToString("N");
-        var user = new User
-        {
-            Id = Guid.NewGuid(),
-            Email = EmailAddress.Create(request.Email),
-            Username = Username.Create(request.Username),
-            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(request.Password)),
-            IsActive = false,
-            ActivationToken = activationToken,
-            ActivationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Role = UserRole.User,
-        };
+        var user = User.Register(
+            EmailAddress.Create(request.Email),
+            Username.Create(request.Username),
+            PlainPassword.Create(request.Password),
+            _passwordHasher,
+            DateTime.UtcNow,
+            TimeSpan.FromHours(24));
 
         await _userRepository.AddAsync(user);
-        await _emailService.SendActivationEmailAsync(user.Email.Value, activationToken);
+        await _emailService.SendActivationEmailAsync(user.Email.Value, user.Activation!.Value);
 
         return new RegisterResponse("確認メールを送信しました");
     }
@@ -50,14 +44,7 @@ public class AuthService(
         var user = await _userRepository.GetByActivationTokenForUpdateAsync(token)
             ?? throw new NotFoundException("有効化トークンが無効です");
 
-        if (user.ActivationTokenExpiresAt < DateTime.UtcNow)
-            throw new ValidationException("有効化トークンの有効期限が切れています");
-
-        user.IsActive = true;
-        user.ActivationToken = null;
-        user.ActivationTokenExpiresAt = null;
-        user.UpdatedAt = DateTime.UtcNow;
-
+        user.Activate(DateTime.UtcNow);
         await _userRepository.UpdateAsync(user);
     }
 

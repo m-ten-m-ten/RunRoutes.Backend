@@ -16,7 +16,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
         db.Users.FirstOrDefaultAsync(u => u.Email.Value == email);
 
     public Task<User?> GetByActivationTokenForUpdateAsync(string token) =>
-        db.Users.FirstOrDefaultAsync(u => u.ActivationToken == token);
+        db.Users.FirstOrDefaultAsync(u => u.Activation != null && u.Activation.Value == token);
 
     public Task<User?> GetByEmailChangeTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.EmailChangeToken == token);

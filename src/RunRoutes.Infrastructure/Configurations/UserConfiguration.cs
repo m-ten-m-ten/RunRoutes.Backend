@@ -32,8 +32,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 value => HashedPassword.FromHash(value)
             );
         builder.Property(u => u.IsActive).HasColumnName("is_active");
-        builder.Property(u => u.ActivationToken).HasColumnName("activation_token");
-        builder.Property(u => u.ActivationTokenExpiresAt).HasColumnName("activation_token_expires_at");
+        builder.OwnsOne(u => u.Activation, at =>
+        {
+            at.Property(x => x.Value).HasColumnName("activation_token");
+            at.Property(x => x.ExpiresAt).HasColumnName("activation_token_expires_at");
+        });
         builder.Property(u => u.PendingEmail).HasColumnName("pending_email");
         builder.Property(u => u.EmailChangeToken).HasColumnName("email_change_token");
         builder.Property(u => u.EmailChangeTokenExpiresAt).HasColumnName("email_change_token_expires_at");

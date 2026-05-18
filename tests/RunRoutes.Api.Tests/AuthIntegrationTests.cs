@@ -23,18 +23,9 @@ public class AuthIntegrationTests : IClassFixture<TestWebApplicationFactory>
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if (!db.Users.Any(u => u.Email == TestEmail))
+        if (!db.Users.Any(u => u.Email.Value == TestEmail))
         {
-            db.Users.Add(new User
-            {
-                Id = Guid.NewGuid(),
-                Email = TestEmail,
-                Username = "integtestuser",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestPassword),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            });
+            db.Users.Add(TestUserBuilder.CreateActivated(TestEmail, "integtestuser", TestPassword));
             db.SaveChanges();
         }
     }

@@ -1,5 +1,6 @@
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests.Courses;
@@ -79,7 +80,7 @@ public class CommentDomainTests
         var userId = Guid.NewGuid();
         var createdAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var updatedAt = createdAt.AddHours(2);
-        var user = new User { Id = userId, Email = EmailAddress.Create("a@example.com"), Username = Username.Create("usr"), CreatedAt = DateTime.UtcNow };
+        var user = UserTestFactory.CreateActivated("a@example.com", "courseuser");
 
         var comment = Comment.Reconstruct(id, courseId, userId, "body", createdAt, updatedAt, user);
 
