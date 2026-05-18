@@ -50,7 +50,7 @@ public class EmailChangeRequestTests
     // ========================================
 
     [Fact]
-    public void IsExpired_有効期限前はfalse()
+    public void IsExpired_期限前はfalse()
     {
         var now = DateTime.UtcNow;
         var req = EmailChangeRequest.Create(SomeEmail, now, TimeSpan.FromHours(24));
@@ -60,21 +60,13 @@ public class EmailChangeRequestTests
     }
 
     [Fact]
-    public void IsExpired_有効期限ちょうどはtrue()
+    public void IsExpired_期限到達でtrue()
     {
         var now = DateTime.UtcNow;
         var validity = TimeSpan.FromHours(24);
         var req = EmailChangeRequest.Create(SomeEmail, now, validity);
 
         Assert.True(req.IsExpired(now + validity));
-    }
-
-    [Fact]
-    public void IsExpired_有効期限後はtrue()
-    {
-        var now = DateTime.UtcNow;
-        var req = EmailChangeRequest.Create(SomeEmail, now, TimeSpan.FromHours(24));
-
         Assert.True(req.IsExpired(now.AddHours(25)));
     }
 }
