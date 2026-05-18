@@ -113,4 +113,131 @@ public class UserDomainTests
         var expired = now.AddHours(25);
         Assert.Throws<ValidationException>(() => user.Activate(expired));
     }
+
+    // ========================================
+    // User.RequestEmailChange
+    // ========================================
+
+    [Fact]
+    public void RequestEmailChange_正常にEmailChangeが設定される()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+
+        var newEmail = EmailAddress.Create("new@example.com");
+        user.RequestEmailChange(newEmail, PlainPassword.Create("password123"), _hasher, now, TimeSpan.FromHours(24));
+
+        Assert.NotNull(user.EmailChange);
+        Assert.Equal(newEmail, user.EmailChange.NewEmail);
+        Assert.NotEmpty(user.EmailChange.Token);
+        Assert.False(user.EmailChange.IsExpired(now));
+    }
+
+    [Fact]
+    public void RequestEmailChange_パスワード不一致でValidationException()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+
+        Assert.Throws<ValidationException>(() =>
+            user.RequestEmailChange(
+                EmailAddress.Create("new@example.com"),
+                PlainPassword.Create("wrong_password"),
+                _hasher,
+                now,
+                TimeSpan.FromHours(24)));
+    }
+
+    // ========================================
+    // User.ConfirmEmailChange
+    // ========================================
+
+    [Fact]
+    public void ConfirmEmailChange_正常にEmailが変更される()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+
+        var newEmail = EmailAddress.Create("new@example.com");
+        user.RequestEmailChange(newEmail, PlainPassword.Create("password123"), _hasher, now, TimeSpan.FromHours(24));
+        var token = user.EmailChange!.Token;
+
+        user.ConfirmEmailChange(token, now);
+
+        Assert.Equal(newEmail, user.Email);
+        Assert.Null(user.EmailChange);
+    }
+
+    [Fact]
+    public void ConfirmEmailChange_要求なしでValidationException()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+
+        Assert.Throws<ValidationException>(() => user.ConfirmEmailChange("some-token", now));
+    }
+
+    [Fact]
+    public void ConfirmEmailChange_トークン不一致でValidationException()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+        user.RequestEmailChange(EmailAddress.Create("new@example.com"), PlainPassword.Create("password123"), _hasher, now, TimeSpan.FromHours(24));
+
+        Assert.Throws<ValidationException>(() => user.ConfirmEmailChange("wrong-token", now));
+    }
+
+    [Fact]
+    public void ConfirmEmailChange_期限切れトークンでValidationException()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("old@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+        user.RequestEmailChange(EmailAddress.Create("new@example.com"), PlainPassword.Create("password123"), _hasher, now, TimeSpan.FromHours(24));
+        var token = user.EmailChange!.Token;
+
+        var expired = now.AddHours(25);
+        Assert.Throws<ValidationException>(() => user.ConfirmEmailChange(token, expired));
+    }
 }

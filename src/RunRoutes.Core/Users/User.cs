@@ -12,13 +12,9 @@ public class User : AggregateRoot
     public UserRole Role { get; private set; } = UserRole.User;
     public ActivationToken? Activation { get; private set; }  // ★ VO に統合
 
-    // === Step 3 で private set 化予定 ===
-    public EmailAddress Email { get; set; } = null!;
-
-    // === Step 3 で EmailChangeRequest VO に統合され削除予定 ===
-    public string? PendingEmail { get; set; }
-    public string? EmailChangeToken { get; set; }
-    public DateTime? EmailChangeTokenExpiresAt { get; set; }
+    // === Step 3 で private set 化 ===
+    public EmailAddress Email { get; private set; } = null!;
+    public EmailChangeRequest? EmailChange { get; private set; }
 
     // === Step 4 で private set 化予定(AuthService の他メソッドが直接書き換えるため一旦 public) ===
     public Username Username { get; set; } = null!;
@@ -75,6 +71,34 @@ public class User : AggregateRoot
     public void PromoteToAdmin(DateTime now)
     {
         Role = UserRole.Admin;
+        UpdatedAt = now;
+    }
+
+    public void RequestEmailChange(
+        EmailAddress newEmail,
+        PlainPassword currentPassword,
+        IPasswordHasher hasher,
+        DateTime now,
+        TimeSpan validity)
+    {
+        if (!hasher.Verify(currentPassword, PasswordHash))
+            throw new ValidationException("現在のパスワードが正しくありません");
+
+        EmailChange = EmailChangeRequest.Create(newEmail, now, validity);
+        UpdatedAt = now;
+    }
+
+    public void ConfirmEmailChange(string token, DateTime now)
+    {
+        if (EmailChange is null)
+            throw new ValidationException("メール変更要求がありません");
+        if (EmailChange.Token != token)
+            throw new ValidationException("メール変更トークンが無効です");
+        if (EmailChange.IsExpired(now))
+            throw new ValidationException("メール変更トークンの有効期限が切れています");
+
+        Email = EmailChange.NewEmail;
+        EmailChange = null;
         UpdatedAt = now;
     }
 }

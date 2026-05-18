@@ -149,4 +149,71 @@ public class AuthServiceTests
         await Assert.ThrowsAsync<ValidationException>(() => _sut.RefreshAsync("expired_refresh"));
     }
 
+    [Fact]
+    public async Task UpdateEmail_正常にメール変更要求が送信される()
+    {
+        var user = UserTestFactory.CreateActivated("old@example.com", "testuser", "password123");
+        var request = new UpdateEmailRequest("new@example.com", "password123");
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByEmailAsync("new@example.com")).ReturnsAsync(false);
+        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+        _emailServiceMock
+            .Setup(e => e.SendEmailChangeEmailAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        await _sut.UpdateEmailAsync(user.Id, request);
+
+        _userRepoMock.Verify(r => r.UpdateAsync(It.Is<User>(u =>
+            u.EmailChange != null &&
+            u.EmailChange.NewEmail.Value == "new@example.com"
+        )), Times.Once);
+        _emailServiceMock.Verify(e => e.SendEmailChangeEmailAsync("new@example.com", It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateEmail_パスワード不一致でValidationException()
+    {
+        var user = UserTestFactory.CreateActivated("old@example.com", "testuser", "correct_password");
+        var request = new UpdateEmailRequest("new@example.com", "wrong_password");
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByEmailAsync("new@example.com")).ReturnsAsync(false);
+
+        await Assert.ThrowsAsync<ValidationException>(() => _sut.UpdateEmailAsync(user.Id, request));
+    }
+
+    [Fact]
+    public async Task UpdateEmail_メール重複でConflictException()
+    {
+        var user = UserTestFactory.CreateActivated("old@example.com", "testuser", "password123");
+        var request = new UpdateEmailRequest("dup@example.com", "password123");
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByEmailAsync("dup@example.com")).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.UpdateEmailAsync(user.Id, request));
+    }
+
+    [Fact]
+    public async Task ActivateEmail_正常にメールが変更される()
+    {
+        var now = DateTime.UtcNow;
+        var user = UserTestFactory.CreateActivated("old@example.com", "testuser", "password123");
+        user.RequestEmailChange(
+            EmailAddress.Create("new@example.com"),
+            PlainPassword.Create("password123"),
+            new FakePasswordHasher(),
+            now,
+            TimeSpan.FromHours(24));
+        var token = user.EmailChange!.Token;
+
+        _userRepoMock.Setup(r => r.GetByEmailChangeTokenForUpdateAsync(token)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+
+        await _sut.ActivateEmailAsync(token);
+
+        Assert.Equal("new@example.com", user.Email.Value);
+        Assert.Null(user.EmailChange);
+    }
 }

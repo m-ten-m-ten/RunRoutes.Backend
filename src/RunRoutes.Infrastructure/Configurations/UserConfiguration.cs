@@ -37,9 +37,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             at.Property(x => x.Value).HasColumnName("activation_token");
             at.Property(x => x.ExpiresAt).HasColumnName("activation_token_expires_at");
         });
-        builder.Property(u => u.PendingEmail).HasColumnName("pending_email");
-        builder.Property(u => u.EmailChangeToken).HasColumnName("email_change_token");
-        builder.Property(u => u.EmailChangeTokenExpiresAt).HasColumnName("email_change_token_expires_at");
+        builder.OwnsOne(u => u.EmailChange, ecr =>
+        {
+            ecr.Property(x => x.NewEmail)
+                .HasColumnName("pending_email")
+                .HasConversion(
+                    vo => vo.Value,
+                    value => EmailAddress.Create(value));
+            ecr.Property(x => x.Token).HasColumnName("email_change_token");
+            ecr.Property(x => x.ExpiresAt).HasColumnName("email_change_token_expires_at");
+        });
         builder.Property(u => u.RefreshToken).HasColumnName("refresh_token");
         builder.Property(u => u.RefreshTokenExpiresAt).HasColumnName("refresh_token_expires_at");
         builder.Property(u => u.CreatedAt).HasColumnName("created_at");

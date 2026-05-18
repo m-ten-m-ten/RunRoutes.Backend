@@ -145,20 +145,19 @@ public class AuthService(
         var user = await _userRepository.GetByIdForUpdateAsync(userId)
             ?? throw new NotFoundException("ユーザーが見つかりません");
 
-        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash.Value))
-            throw new ValidationException("現在のパスワードが正しくありません");
-
-        if (await _userRepository.ExistsByEmailAsync(request.NewEmail))
+        var newEmail = EmailAddress.Create(request.NewEmail);
+        if (await _userRepository.ExistsByEmailAsync(newEmail.Value))
             throw new ConflictException("このメールアドレスはすでに使用されています");
 
-        var token = Guid.NewGuid().ToString("N");
-        user.PendingEmail = request.NewEmail;
-        user.EmailChangeToken = token;
-        user.EmailChangeTokenExpiresAt = DateTime.UtcNow.AddHours(24);
-        user.UpdatedAt = DateTime.UtcNow;
+        user.RequestEmailChange(
+            newEmail,
+            PlainPassword.Create(request.CurrentPassword),
+            _passwordHasher,
+            DateTime.UtcNow,
+            TimeSpan.FromHours(24));
 
         await _userRepository.UpdateAsync(user);
-        await _emailService.SendEmailChangeEmailAsync(request.NewEmail, token);
+        await _emailService.SendEmailChangeEmailAsync(newEmail.Value, user.EmailChange!.Token);
 
         return new UpdateEmailResponse("新しいメールアドレスに確認メールを送信しました");
     }
@@ -168,15 +167,7 @@ public class AuthService(
         var user = await _userRepository.GetByEmailChangeTokenForUpdateAsync(token)
             ?? throw new NotFoundException("メール変更トークンが無効です");
 
-        if (user.EmailChangeTokenExpiresAt < DateTime.UtcNow)
-            throw new ValidationException("メール変更トークンの有効期限が切れています");
-
-        user.Email = EmailAddress.Create(user.PendingEmail!);
-        user.PendingEmail = null;
-        user.EmailChangeToken = null;
-        user.EmailChangeTokenExpiresAt = null;
-        user.UpdatedAt = DateTime.UtcNow;
-
+        user.ConfirmEmailChange(token, DateTime.UtcNow);
         await _userRepository.UpdateAsync(user);
     }
 
