@@ -6,9 +6,9 @@ namespace RunRoutes.Core.Users;
 public class User : AggregateRoot
 {
     public Guid Id { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public string Username { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty;
+    public EmailAddress Email { get; set; } = null!;
+    public Username Username { get; set; } = null!;
+    public HashedPassword PasswordHash { get; set; } = null!;
     public bool IsActive { get; set; }
     public string? ActivationToken { get; set; }
     public DateTime? ActivationTokenExpiresAt { get; set; }

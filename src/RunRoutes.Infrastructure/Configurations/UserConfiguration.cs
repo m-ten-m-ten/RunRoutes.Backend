@@ -13,9 +13,24 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.Ignore(u => u.DomainEvents);
         builder.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
-        builder.Property(u => u.Email).HasColumnName("email");
-        builder.Property(u => u.Username).HasColumnName("username");
-        builder.Property(u => u.PasswordHash).HasColumnName("password_hash");
+        builder.Property(u => u.Email)
+            .HasColumnName("email")
+            .HasConversion(
+                vo => vo.Value,
+                value => EmailAddress.Create(value)
+            );
+        builder.Property(u => u.Username)
+            .HasColumnName("username")
+            .HasConversion(
+                vo => vo.Value,
+                value => Username.Create(value)
+            );
+        builder.Property(u => u.PasswordHash)
+            .HasColumnName("password_hash")
+            .HasConversion(
+                vo => vo.Value,
+                value => HashedPassword.FromHash(value)
+            );
         builder.Property(u => u.IsActive).HasColumnName("is_active");
         builder.Property(u => u.ActivationToken).HasColumnName("activation_token");
         builder.Property(u => u.ActivationTokenExpiresAt).HasColumnName("activation_token_expires_at");

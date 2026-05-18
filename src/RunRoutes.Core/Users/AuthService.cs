@@ -28,9 +28,9 @@ public class AuthService(
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = request.Email,
-            Username = request.Username,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            Email = EmailAddress.Create(request.Email),
+            Username = Username.Create(request.Username),
+            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(request.Password)),
             IsActive = false,
             ActivationToken = activationToken,
             ActivationTokenExpiresAt = DateTime.UtcNow.AddHours(24),
@@ -40,7 +40,7 @@ public class AuthService(
         };
 
         await _userRepository.AddAsync(user);
-        await _emailService.SendActivationEmailAsync(user.Email, activationToken);
+        await _emailService.SendActivationEmailAsync(user.Email.Value, activationToken);
 
         return new RegisterResponse("確認メールを送信しました");
     }
@@ -69,7 +69,7 @@ public class AuthService(
         if (!user.IsActive)
             throw new ValidationException("アカウントが有効化されていません");
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash.Value))
             throw new ValidationException("メールアドレスまたはパスワードが正しくありません");
 
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -131,9 +131,9 @@ public class AuthService(
 
         if (request.Username is not null)
         {
-            if (request.Username != user.Username && await _userRepository.ExistsByUsernameAsync(request.Username))
+            if (request.Username != user.Username.Value && await _userRepository.ExistsByUsernameAsync(request.Username))
                 throw new ConflictException("このユーザー名はすでに使用されています");
-            user.Username = request.Username;
+            user.Username = Username.Create(request.Username);
         }
 
         if (request.NewPassword is not null)
@@ -141,10 +141,10 @@ public class AuthService(
             if (string.IsNullOrEmpty(request.CurrentPassword))
                 throw new ValidationException("現在のパスワードを入力してください");
 
-            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash.Value))
                 throw new ValidationException("現在のパスワードが正しくありません");
 
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            user.PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(request.NewPassword));
         }
 
         user.UpdatedAt = DateTime.UtcNow;
@@ -158,7 +158,7 @@ public class AuthService(
         var user = await _userRepository.GetByIdForUpdateAsync(userId)
             ?? throw new NotFoundException("ユーザーが見つかりません");
 
-        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash.Value))
             throw new ValidationException("現在のパスワードが正しくありません");
 
         if (await _userRepository.ExistsByEmailAsync(request.NewEmail))
@@ -184,7 +184,7 @@ public class AuthService(
         if (user.EmailChangeTokenExpiresAt < DateTime.UtcNow)
             throw new ValidationException("メール変更トークンの有効期限が切れています");
 
-        user.Email = user.PendingEmail!;
+        user.Email = EmailAddress.Create(user.PendingEmail!);
         user.PendingEmail = null;
         user.EmailChangeToken = null;
         user.EmailChangeTokenExpiresAt = null;
@@ -194,5 +194,5 @@ public class AuthService(
     }
 
     private static UserDto ToUserDto(User user) =>
-        new(user.Id, user.Email, user.Username, user.Role.ToString(), user.CreatedAt);
+        new(user.Id, user.Email.Value, user.Username.Value, user.Role.ToString(), user.CreatedAt);
 }

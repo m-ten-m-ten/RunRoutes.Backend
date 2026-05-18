@@ -32,7 +32,7 @@ public class CourseServiceTests
         if (courseId is not null)
             SetPrivate(course, nameof(Course.Id), courseId.Value);
 
-        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+        var user = new User { Id = uid, Email = EmailAddress.Create("a@example.com"), Username = Username.Create("user"), CreatedAt = DateTime.UtcNow };
         SetPrivate(course, nameof(Course.User), user);
 
         return course;

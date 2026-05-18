@@ -21,7 +21,7 @@ public class CommentServiceTests
     {
         var uid = ownerId ?? Guid.NewGuid();
         var cid = courseId ?? Guid.NewGuid();
-        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+        var user = new User { Id = uid, Email = EmailAddress.Create("a@example.com"), Username = Username.Create("user"), CreatedAt = DateTime.UtcNow };
 
         // comments を持つテスト用 Course は Reconstruct 経由で組み立てる(論点 B-3)
         if (comments is not null)

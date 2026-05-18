@@ -13,7 +13,7 @@ public class UserRepository(AppDbContext db) : IUserRepository
         db.Users.FirstOrDefaultAsync(u => u.Id == id);
 
     public Task<User?> GetByEmailForUpdateAsync(string email) =>
-        db.Users.FirstOrDefaultAsync(u => u.Email == email);
+        db.Users.FirstOrDefaultAsync(u => u.Email.Value == email);
 
     public Task<User?> GetByActivationTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.ActivationToken == token);
@@ -25,10 +25,10 @@ public class UserRepository(AppDbContext db) : IUserRepository
         db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
 
     public Task<bool> ExistsByEmailAsync(string email) =>
-        db.Users.AnyAsync(u => u.Email == email);
+        db.Users.AnyAsync(u => u.Email.Value == email);
 
     public Task<bool> ExistsByUsernameAsync(string username) =>
-        db.Users.AnyAsync(u => u.Username == username);
+        db.Users.AnyAsync(u => u.Username.Value == username);
 
     public async Task AddAsync(User user)
     {

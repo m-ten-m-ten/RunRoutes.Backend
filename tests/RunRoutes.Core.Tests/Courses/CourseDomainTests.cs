@@ -61,7 +61,7 @@ public class CourseDomainTests
         var userId = Guid.NewGuid();
         var createdAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var updatedAt = createdAt.AddDays(1);
-        var user = new User { Id = userId, Email = "a@example.com", Username = "u", CreatedAt = DateTime.UtcNow };
+        var user = new User { Id = userId, Email = EmailAddress.Create("a@example.com"), Username = Username.Create("usr"), CreatedAt = DateTime.UtcNow };
 
         var course = Course.Reconstruct(
             id: id,

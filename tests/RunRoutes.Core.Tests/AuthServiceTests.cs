@@ -41,9 +41,9 @@ public class AuthServiceTests
         await _sut.RegisterAsync(request);
 
         _userRepoMock.Verify(r => r.AddAsync(It.Is<User>(u =>
-            u.Email == request.Email &&
-            u.Username == request.Username &&
-            u.PasswordHash != request.Password &&
+            u.Email.Value == request.Email &&
+            u.Username.Value == request.Username &&
+            u.PasswordHash.Value != request.Password &&
             u.ActivationToken != null &&
             !u.IsActive
         )), Times.Once);
@@ -52,7 +52,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Register_メール重複でConflictException()
     {
-        var request = new RegisterRequest("dup@example.com", "user", "password");
+        var request = new RegisterRequest("dup@example.com", "dupuser", "password123");
         _userRepoMock.Setup(r => r.ExistsByEmailAsync(request.Email)).ReturnsAsync(true);
 
         await Assert.ThrowsAsync<ConflictException>(() => _sut.RegisterAsync(request));
@@ -61,7 +61,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Register_ユーザー名重複でConflictException()
     {
-        var request = new RegisterRequest("test@example.com", "dupuser", "password");
+        var request = new RegisterRequest("test@example.com", "dupuser", "password123");
         _userRepoMock.Setup(r => r.ExistsByEmailAsync(request.Email)).ReturnsAsync(false);
         _userRepoMock.Setup(r => r.ExistsByUsernameAsync(request.Username)).ReturnsAsync(true);
 
@@ -75,13 +75,13 @@ public class AuthServiceTests
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Username = "testuser",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Email = EmailAddress.Create("test@example.com"),
+            Username = Username.Create("testuser"),
+            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(password)),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        var request = new LoginRequest(user.Email, password);
+        var request = new LoginRequest(user.Email.Value, password);
 
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(request.Email)).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("access_token");
@@ -101,14 +101,14 @@ public class AuthServiceTests
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = "inactive@example.com",
+            Email = EmailAddress.Create("inactive@example.com"),
             IsActive = false,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password")
+            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword("password123"))
         };
-        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
-            () => _sut.LoginAsync(new LoginRequest(user.Email, "password")));
+            () => _sut.LoginAsync(new LoginRequest(user.Email.Value, "password123")));
     }
 
     [Fact]
@@ -117,14 +117,14 @@ public class AuthServiceTests
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = "test@example.com",
+            Email = EmailAddress.Create("test@example.com"),
             IsActive = true,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("correct_password")
+            PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword("correct_password"))
         };
-        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
-            () => _sut.LoginAsync(new LoginRequest(user.Email, "wrong_password")));
+            () => _sut.LoginAsync(new LoginRequest(user.Email.Value, "wrong_password")));
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public class AuthServiceTests
             .ReturnsAsync((User?)null);
 
         await Assert.ThrowsAsync<ValidationException>(
-            () => _sut.LoginAsync(new LoginRequest("noexist@example.com", "password")));
+            () => _sut.LoginAsync(new LoginRequest("noexist@example.com", "password123")));
     }
 
     [Fact]
@@ -144,8 +144,8 @@ public class AuthServiceTests
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Username = "testuser",
+            Email = EmailAddress.Create("test@example.com"),
+            Username = Username.Create("testuser"),
             RefreshToken = "old_refresh",
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
             CreatedAt = DateTime.UtcNow

@@ -20,8 +20,8 @@ public class JwtService(IOptions<JwtSettings> settings) : IJwtService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim("email", user.Email),
-            new Claim("username", user.Username),
+            new Claim("email", user.Email.Value),
+            new Claim("username", user.Username.Value),
             new Claim(ClaimTypes.Role, user.Role.ToString()),
         };
 

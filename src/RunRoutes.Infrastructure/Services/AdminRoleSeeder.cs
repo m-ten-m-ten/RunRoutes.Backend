@@ -30,12 +30,12 @@ public class AdminRoleSeeder(
         if (normalized.Count == 0) return;
 
         var users = await db.Users
-            .Where(u => normalized.Contains(u.Email.ToLower()))
+            .Where(u => normalized.Contains(u.Email.Value))
             .ToListAsync(cancellationToken);
 
         foreach (var email in normalized)
         {
-            if (!users.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            if (!users.Any(u => u.Email.Value == email))
             {
                 logger.LogWarning(
                     "AdminEmails に設定されたメール {Email} に対応するユーザーが存在しません。管理者昇格をスキップします",
