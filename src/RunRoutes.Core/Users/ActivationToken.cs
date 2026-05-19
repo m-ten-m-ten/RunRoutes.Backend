@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.Exceptions;
 
 namespace RunRoutes.Core.Users;
@@ -19,7 +19,7 @@ public sealed record ActivationToken
         if (validity <= TimeSpan.Zero)
             throw new ValidationException("有効期間は正の値である必要があります");
 
-        var value = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var value = SecureToken.Generate();
         return new ActivationToken(value, now + validity);
     }
 

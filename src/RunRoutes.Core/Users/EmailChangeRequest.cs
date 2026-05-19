@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.Exceptions;
 
 namespace RunRoutes.Core.Users;
@@ -21,7 +21,7 @@ public sealed record EmailChangeRequest
         if (validity <= TimeSpan.Zero)
             throw new ValidationException("有効期間は正の値である必要があります");
 
-        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var token = SecureToken.Generate();
         return new EmailChangeRequest(newEmail, token, now + validity);
     }
 

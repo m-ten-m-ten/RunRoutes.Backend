@@ -18,6 +18,18 @@ public class ActivationTokenTests
     }
 
     [Fact]
+    public void Generate_URLセーフでない文字を含まない()
+    {
+        // URL クエリ文字列で '+' は半角スペースに化けるため、
+        // '+' '/' '=' を含まない Base64Url であること
+        var token = ActivationToken.Generate(DateTime.UtcNow, TimeSpan.FromHours(1));
+
+        Assert.DoesNotContain('+', token.Value);
+        Assert.DoesNotContain('/', token.Value);
+        Assert.DoesNotContain('=', token.Value);
+    }
+
+    [Fact]
     public void Generate_値がランダムで毎回異なる()
     {
         var now = DateTime.UtcNow;
