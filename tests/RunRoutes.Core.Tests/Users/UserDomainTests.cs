@@ -240,4 +240,108 @@ public class UserDomainTests
         var expired = now.AddHours(25);
         Assert.Throws<ValidationException>(() => user.ConfirmEmailChange(token, expired));
     }
+
+    // ========================================
+    // User.ChangeUsername
+    // ========================================
+
+    [Fact]
+    public void ChangeUsername_正常にユーザー名が変更される()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("test@example.com"),
+            Username.Create("olduser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+
+        var later = now.AddMinutes(10);
+        var newUsername = Username.Create("newuser");
+        user.ChangeUsername(newUsername, later);
+
+        Assert.Equal(newUsername, user.Username);
+        Assert.Equal(later, user.UpdatedAt);
+    }
+
+    // ========================================
+    // User.ChangePassword
+    // ========================================
+
+    [Fact]
+    public void ChangePassword_正常にパスワードが変更される()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("test@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("old_password"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+
+        var later = now.AddMinutes(10);
+        user.ChangePassword(
+            PlainPassword.Create("old_password"),
+            PlainPassword.Create("new_password"),
+            _hasher,
+            later);
+
+        Assert.True(_hasher.Verify(PlainPassword.Create("new_password"), user.PasswordHash));
+        Assert.False(_hasher.Verify(PlainPassword.Create("old_password"), user.PasswordHash));
+        Assert.Equal(later, user.UpdatedAt);
+    }
+
+    [Fact]
+    public void ChangePassword_現在のパスワード不一致でValidationException()
+    {
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("test@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("correct_password"),
+            _hasher,
+            now,
+            TimeSpan.FromHours(24));
+
+        Assert.Throws<ValidationException>(() =>
+            user.ChangePassword(
+                PlainPassword.Create("wrong_password"),
+                PlainPassword.Create("new_password"),
+                _hasher,
+                now));
+    }
+
+    // ========================================
+    // User.VerifyPassword
+    // ========================================
+
+    [Fact]
+    public void VerifyPassword_一致でtrue()
+    {
+        var user = User.Register(
+            EmailAddress.Create("test@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            DateTime.UtcNow,
+            TimeSpan.FromHours(24));
+
+        Assert.True(user.VerifyPassword(PlainPassword.Create("password123"), _hasher));
+    }
+
+    [Fact]
+    public void VerifyPassword_不一致でfalse()
+    {
+        var user = User.Register(
+            EmailAddress.Create("test@example.com"),
+            Username.Create("testuser"),
+            PlainPassword.Create("password123"),
+            _hasher,
+            DateTime.UtcNow,
+            TimeSpan.FromHours(24));
+
+        Assert.False(user.VerifyPassword(PlainPassword.Create("wrong_password"), _hasher));
+    }
 }

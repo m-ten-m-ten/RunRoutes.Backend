@@ -56,7 +56,7 @@ public class AuthService(
         if (!user.IsActive)
             throw new ValidationException("アカウントが有効化されていません");
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash.Value))
+        if (!user.VerifyPassword(PlainPassword.Create(request.Password), _passwordHasher))
             throw new ValidationException("メールアドレスまたはパスワードが正しくありません");
 
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -118,9 +118,11 @@ public class AuthService(
 
         if (request.Username is not null)
         {
-            if (request.Username != user.Username.Value && await _userRepository.ExistsByUsernameAsync(request.Username))
+            var newUsername = Username.Create(request.Username);
+            if (!user.Username.Equals(newUsername) &&
+                await _userRepository.ExistsByUsernameAsync(newUsername.Value))
                 throw new ConflictException("このユーザー名はすでに使用されています");
-            user.Username = Username.Create(request.Username);
+            user.ChangeUsername(newUsername, DateTime.UtcNow);
         }
 
         if (request.NewPassword is not null)
@@ -128,15 +130,14 @@ public class AuthService(
             if (string.IsNullOrEmpty(request.CurrentPassword))
                 throw new ValidationException("現在のパスワードを入力してください");
 
-            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash.Value))
-                throw new ValidationException("現在のパスワードが正しくありません");
-
-            user.PasswordHash = HashedPassword.FromHash(BCrypt.Net.BCrypt.HashPassword(request.NewPassword));
+            user.ChangePassword(
+            PlainPassword.Create(request.CurrentPassword),
+            PlainPassword.Create(request.NewPassword),
+            _passwordHasher,
+            DateTime.UtcNow);
         }
 
-        user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);
-
         return new UpdateMeResponse(ToUserDto(user));
     }
 

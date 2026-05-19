@@ -16,13 +16,13 @@ public class User : AggregateRoot
     public EmailAddress Email { get; private set; } = null!;
     public EmailChangeRequest? EmailChange { get; private set; }
 
-    // === Step 4 で private set 化予定(AuthService の他メソッドが直接書き換えるため一旦 public) ===
-    public Username Username { get; set; } = null!;
-    public HashedPassword PasswordHash { get; set; } = null!;
-    public bool IsActive { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    // === Step 4 で新たに private set 化 ===
+    public Username Username { get; private set; } = null!;
+    public HashedPassword PasswordHash { get; private set; } = null!;
+    public bool IsActive { get; private set; }
 
-    // === Step 5 で削除予定 ===
+    // === Step 5 で削除/private set 化予定なので public set 据え置き ===
+    public DateTime UpdatedAt { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiresAt { get; set; }
 
@@ -99,6 +99,28 @@ public class User : AggregateRoot
 
         Email = EmailChange.NewEmail;
         EmailChange = null;
+        UpdatedAt = now;
+    }
+
+    public bool VerifyPassword(PlainPassword password, IPasswordHasher hasher) =>
+        hasher.Verify(password, PasswordHash);
+
+    public void ChangeUsername(Username newUsername, DateTime now)
+    {
+        Username = newUsername;
+        UpdatedAt = now;
+    }
+
+    public void ChangePassword(
+        PlainPassword currentPassword,
+        PlainPassword newPassword,
+        IPasswordHasher hasher,
+        DateTime now)
+    {
+        if (!hasher.Verify(currentPassword, PasswordHash))
+            throw new ValidationException("現在のパスワードが正しくありません");
+
+        PasswordHash = hasher.Hash(newPassword);
         UpdatedAt = now;
     }
 }

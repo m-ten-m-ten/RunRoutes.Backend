@@ -73,7 +73,7 @@ public class AuthServiceTests
     public async Task Login_正常にトークンが発行される()
     {
         var password = "password123";
-        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", password, new BCryptTestHasher());
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", password);
         var request = new LoginRequest(user.Email.Value, password);
 
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(request.Email)).ReturnsAsync(user);
@@ -101,7 +101,7 @@ public class AuthServiceTests
     [Fact]
     public async Task Login_パスワード不一致でValidationException()
     {
-        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", "correct_password", new BCryptTestHasher());
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", "correct_password");
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(
@@ -215,5 +215,58 @@ public class AuthServiceTests
 
         Assert.Equal("new@example.com", user.Email.Value);
         Assert.Null(user.EmailChange);
+    }
+
+    [Fact]
+    public async Task UpdateMe_ユーザー名を正常に変更できる()
+    {
+        var user = UserTestFactory.CreateActivated("test@example.com", "olduser", "password123");
+        var request = new UpdateMeRequest("newuser", null, null);
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync("newuser")).ReturnsAsync(false);
+        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+
+        var response = await _sut.UpdateMeAsync(user.Id, request);
+
+        Assert.Equal("newuser", response.User.Username);
+        _userRepoMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.Username.Value == "newuser")), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateMe_ユーザー名重複でConflictException()
+    {
+        var user = UserTestFactory.CreateActivated("test@example.com", "olduser", "password123");
+        var request = new UpdateMeRequest("dupuser", null, null);
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.ExistsByUsernameAsync("dupuser")).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<ConflictException>(() => _sut.UpdateMeAsync(user.Id, request));
+    }
+
+    [Fact]
+    public async Task UpdateMe_パスワードを正常に変更できる()
+    {
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", "old_password");
+        var request = new UpdateMeRequest(null, "old_password", "new_password");
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+
+        await _sut.UpdateMeAsync(user.Id, request);
+
+        Assert.True(user.VerifyPassword(PlainPassword.Create("new_password"), new FakePasswordHasher()));
+    }
+
+    [Fact]
+    public async Task UpdateMe_新パスワードありで現在のパスワード未入力でValidationException()
+    {
+        var user = UserTestFactory.CreateActivated("test@example.com", "testuser", "old_password");
+        var request = new UpdateMeRequest(null, null, "new_password");
+
+        _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
+
+        await Assert.ThrowsAsync<ValidationException>(() => _sut.UpdateMeAsync(user.Id, request));
     }
 }
