@@ -42,6 +42,24 @@ public class PlainPasswordTests
         Assert.Throws<ValidationException>(() => PlainPassword.Create(new string('a', 101)));
     }
 
+    [Theory]
+    [InlineData("a")]
+    [InlineData("1234567")]          // 7文字（Create では弾かれる長さ）
+    [InlineData("password123")]
+    public void CreateForVerification_長さに関わらず通る(string input)
+    {
+        var plain = PlainPassword.CreateForVerification(input);
+        Assert.Equal(input, plain.Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void CreateForVerification_空でValidationException(string? input)
+    {
+        Assert.Throws<ValidationException>(() => PlainPassword.CreateForVerification(input!));
+    }
+
     [Fact]
     public void ToString_マスクされる()
     {

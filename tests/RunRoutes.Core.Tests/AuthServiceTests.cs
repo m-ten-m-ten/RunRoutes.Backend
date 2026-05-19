@@ -117,6 +117,29 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task Login_8文字未満の既存パスワードでもログインできる()
+    {
+        // 8文字ポリシー導入前に作られた短いパスワードの既存ユーザーを再現する
+        var now = DateTime.UtcNow;
+        var user = User.Register(
+            EmailAddress.Create("legacy@example.com"),
+            Username.Create("legacyuser"),
+            PlainPassword.CreateForVerification("pass"),
+            new FakePasswordHasher(),
+            now,
+            TimeSpan.FromHours(24));
+        user.Activate(now);
+
+        _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(user.Email.Value)).ReturnsAsync(user);
+        _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("access_token");
+        _sessionRepoMock.Setup(r => r.AddAsync(It.IsAny<Session>())).Returns(Task.CompletedTask);
+
+        var (response, _) = await _sut.LoginAsync(new LoginRequest(user.Email.Value, "pass"));
+
+        Assert.Equal("access_token", response.AccessToken);
+    }
+
+    [Fact]
     public async Task Login_存在しないメールでValidationException()
     {
         _userRepoMock

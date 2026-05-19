@@ -59,7 +59,7 @@ public class AuthService(
         if (!user.IsActive)
             throw new ValidationException("アカウントが有効化されていません");
 
-        if (!user.VerifyPassword(PlainPassword.Create(request.Password), _passwordHasher))
+        if (!user.VerifyPassword(PlainPassword.CreateForVerification(request.Password), _passwordHasher))
             throw new ValidationException("メールアドレスまたはパスワードが正しくありません");
 
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -131,7 +131,7 @@ public class AuthService(
                 throw new ValidationException("現在のパスワードを入力してください");
 
             user.ChangePassword(
-            PlainPassword.Create(request.CurrentPassword),
+            PlainPassword.CreateForVerification(request.CurrentPassword),
             PlainPassword.Create(request.NewPassword),
             _passwordHasher,
             DateTime.UtcNow);
@@ -152,7 +152,7 @@ public class AuthService(
 
         user.RequestEmailChange(
             newEmail,
-            PlainPassword.Create(request.CurrentPassword),
+            PlainPassword.CreateForVerification(request.CurrentPassword),
             _passwordHasher,
             DateTime.UtcNow,
             TimeSpan.FromHours(24));
