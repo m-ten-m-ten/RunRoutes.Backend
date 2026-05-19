@@ -12,8 +12,11 @@ public class UserRepository(AppDbContext db) : IUserRepository
     public Task<User?> GetByIdForUpdateAsync(Guid id) =>
         db.Users.FirstOrDefaultAsync(u => u.Id == id);
 
-    public Task<User?> GetByEmailForUpdateAsync(string email) =>
-        db.Users.FirstOrDefaultAsync(u => u.Email.Value == email);
+    public Task<User?> GetByEmailForUpdateAsync(string email)
+    {
+        var vo = EmailAddress.Create(email);
+        return db.Users.FirstOrDefaultAsync(u => u.Email == vo);
+    }
 
     public Task<User?> GetByActivationTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.Activation != null && u.Activation.Value == token);
@@ -21,14 +24,17 @@ public class UserRepository(AppDbContext db) : IUserRepository
     public Task<User?> GetByEmailChangeTokenForUpdateAsync(string token) =>
         db.Users.FirstOrDefaultAsync(u => u.EmailChange != null && u.EmailChange.Token == token);
 
-    public Task<User?> GetByRefreshTokenForUpdateAsync(string token) =>
-        db.Users.FirstOrDefaultAsync(u => u.RefreshToken == token);
+    public Task<bool> ExistsByEmailAsync(string email)
+    {
+        var vo = EmailAddress.Create(email);
+        return db.Users.AnyAsync(u => u.Email == vo);
+    }
 
-    public Task<bool> ExistsByEmailAsync(string email) =>
-        db.Users.AnyAsync(u => u.Email.Value == email);
-
-    public Task<bool> ExistsByUsernameAsync(string username) =>
-        db.Users.AnyAsync(u => u.Username.Value == username);
+    public Task<bool> ExistsByUsernameAsync(string username)
+    {
+        var vo = Username.Create(username);
+        return db.Users.AnyAsync(u => u.Username == vo);
+    }
 
     public async Task AddAsync(User user)
     {

@@ -3,6 +3,7 @@ using RunRoutes.Core.Audit;
 using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.DomainEvents;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
 
@@ -19,6 +20,7 @@ public class AppDbContext(
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<AuditLogEntry> AuditLogs => Set<AuditLogEntry>();
+    public DbSet<Session> Sessions => Set<Session>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

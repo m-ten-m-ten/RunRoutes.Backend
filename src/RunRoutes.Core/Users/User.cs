@@ -22,13 +22,11 @@ public class User : AggregateRoot
     public bool IsActive { get; private set; }
 
     // === Step 5 で削除/private set 化予定なので public set 据え置き ===
-    public DateTime UpdatedAt { get; set; }
-    public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiresAt { get; set; }
+    public DateTime UpdatedAt { get; private set; }
 
     // === Step 5 で private set 化予定(EF Core が触るのみなので最終で十分) ===
-    public ICollection<Course> Courses { get; set; } = [];
-    public ICollection<Comment> Comments { get; set; } = [];
+    public ICollection<Course> Courses { get; private set; } = [];
+    public ICollection<Comment> Comments { get; private set; } = [];
 
     private User() { } // EF Core 用
 

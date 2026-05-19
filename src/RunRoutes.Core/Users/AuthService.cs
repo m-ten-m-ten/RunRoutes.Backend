@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Settings;
 using RunRoutes.Core.Users.Dtos;
 
@@ -7,12 +8,14 @@ namespace RunRoutes.Core.Users;
 
 public class AuthService(
     IUserRepository userRepository,
+    ISessionRepository sessionRepository,
     IJwtService jwtService,
     IEmailService emailService,
     IPasswordHasher passwordHasher,
     IOptions<JwtSettings> jwtSettings) : IAuthService
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly ISessionRepository _sessionRepository = sessionRepository;
     private readonly IJwtService _jwtService = jwtService;
     private readonly IEmailService _emailService = emailService;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
@@ -60,47 +63,44 @@ public class AuthService(
             throw new ValidationException("メールアドレスまたはパスワードが正しくありません");
 
         var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = _jwtService.GenerateRefreshToken();
+        var now = DateTime.UtcNow;
+        var refreshToken = RefreshToken.Generate(
+            now, TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays));
+        var session = Session.Start(user.Id, refreshToken, now);
 
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
-        user.UpdatedAt = DateTime.UtcNow;
+        await _sessionRepository.AddAsync(session);
 
-        await _userRepository.UpdateAsync(user);
-
-        return (new LoginResponse(accessToken, ToUserDto(user)), refreshToken);
+        return (new LoginResponse(accessToken, ToUserDto(user)), refreshToken.Value);
     }
 
     public async Task LogoutAsync(string refreshToken)
     {
-        var user = await _userRepository.GetByRefreshTokenForUpdateAsync(refreshToken);
-        if (user is null) return;
+        var session = await _sessionRepository.GetByRefreshTokenForUpdateAsync(refreshToken);
+        if (session is null) return;
 
-        user.RefreshToken = null;
-        user.RefreshTokenExpiresAt = null;
-        user.UpdatedAt = DateTime.UtcNow;
-
-        await _userRepository.UpdateAsync(user);
+        await _sessionRepository.DeleteAsync(session);
     }
 
     public async Task<(RefreshResponse Response, string NewRefreshToken)> RefreshAsync(string refreshToken)
     {
-        var user = await _userRepository.GetByRefreshTokenForUpdateAsync(refreshToken)
+        var session = await _sessionRepository.GetByRefreshTokenForUpdateAsync(refreshToken)
             ?? throw new ValidationException("リフレッシュトークンが無効です");
 
-        if (user.RefreshTokenExpiresAt < DateTime.UtcNow)
+        var now = DateTime.UtcNow;
+        if (session.IsExpired(now))
             throw new ValidationException("リフレッシュトークンの有効期限が切れています");
 
+        var user = await _userRepository.GetByIdAsync(session.UserId)
+            ?? throw new ValidationException("ユーザーが見つかりません");
+
         var newAccessToken = _jwtService.GenerateAccessToken(user);
-        var newRefreshToken = _jwtService.GenerateRefreshToken();
+        var newRefreshToken = RefreshToken.Generate(
+            now, TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays));
 
-        user.RefreshToken = newRefreshToken;
-        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpirationDays);
-        user.UpdatedAt = DateTime.UtcNow;
+        session.Rotate(newRefreshToken, now);
+        await _sessionRepository.UpdateAsync(session);
 
-        await _userRepository.UpdateAsync(user);
-
-        return (new RefreshResponse(newAccessToken, ToUserDto(user)), newRefreshToken);
+        return (new RefreshResponse(newAccessToken, ToUserDto(user)), newRefreshToken.Value);
     }
 
     public async Task<MeResponse> GetMeAsync(Guid userId)

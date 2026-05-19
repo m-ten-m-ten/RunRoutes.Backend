@@ -47,8 +47,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             ecr.Property(x => x.Token).HasColumnName("email_change_token");
             ecr.Property(x => x.ExpiresAt).HasColumnName("email_change_token_expires_at");
         });
-        builder.Property(u => u.RefreshToken).HasColumnName("refresh_token");
-        builder.Property(u => u.RefreshTokenExpiresAt).HasColumnName("refresh_token_expires_at");
         builder.Property(u => u.CreatedAt).HasColumnName("created_at");
         builder.Property(u => u.UpdatedAt).HasColumnName("updated_at");
         builder.Property(u => u.Role)

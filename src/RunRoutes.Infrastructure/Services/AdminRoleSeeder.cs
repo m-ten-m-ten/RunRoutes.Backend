@@ -22,20 +22,20 @@ public class AdminRoleSeeder(
             return;
         }
 
-        var normalized = _settings.AdminEmails
+        var normalizedEmails = _settings.AdminEmails
             .Where(e => !string.IsNullOrWhiteSpace(e))
-            .Select(e => e.Trim().ToLowerInvariant())
-            .ToHashSet();
+            .Select(e => EmailAddress.Create(e.Trim().ToLowerInvariant()))
+            .ToList();
 
-        if (normalized.Count == 0) return;
+        if (normalizedEmails.Count == 0) return;
 
         var users = await db.Users
-            .Where(u => normalized.Contains(u.Email.Value))
+            .Where(u => normalizedEmails.Contains(u.Email))
             .ToListAsync(cancellationToken);
 
-        foreach (var email in normalized)
+        foreach (var email in normalizedEmails)
         {
-            if (!users.Any(u => u.Email.Value == email))
+            if (!users.Any(u => u.Email == email))
             {
                 logger.LogWarning(
                     "AdminEmails に設定されたメール {Email} に対応するユーザーが存在しません。管理者昇格をスキップします",

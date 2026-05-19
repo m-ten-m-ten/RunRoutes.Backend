@@ -83,7 +83,7 @@ public class AdminRoleSeederTests
     {
         var db = CreateDb(Guid.NewGuid().ToString());
         var user = MakeUser("admin@example.com", UserRole.Admin);
-        var initialUpdatedAt = user.UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var initialUpdatedAt = user.UpdatedAt;
         db.Users.Add(user);
         await db.SaveChangesAsync();
 

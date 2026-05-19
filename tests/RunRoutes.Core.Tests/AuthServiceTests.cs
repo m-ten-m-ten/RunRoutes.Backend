@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Moq;
 using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Settings;
 using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
@@ -11,6 +12,7 @@ namespace RunRoutes.Core.Tests;
 public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly Mock<ISessionRepository> _sessionRepoMock = new();
     private readonly Mock<IJwtService> _jwtServiceMock = new();
     private readonly Mock<IEmailService> _emailServiceMock = new();
     private readonly AuthService _sut;
@@ -25,7 +27,7 @@ public class AuthServiceTests
             AccessTokenExpirationMinutes = 15,
             RefreshTokenExpirationDays = 7
         });
-        _sut = new AuthService(_userRepoMock.Object, _jwtServiceMock.Object, _emailServiceMock.Object, new FakePasswordHasher(), jwtSettings);
+        _sut = new AuthService(_userRepoMock.Object, _sessionRepoMock.Object, _jwtServiceMock.Object, _emailServiceMock.Object, new FakePasswordHasher(), jwtSettings);
     }
 
     [Fact]
@@ -76,16 +78,22 @@ public class AuthServiceTests
         var user = UserTestFactory.CreateActivated("test@example.com", "testuser", password);
         var request = new LoginRequest(user.Email.Value, password);
 
+        Session? captured = null;
         _userRepoMock.Setup(r => r.GetByEmailForUpdateAsync(request.Email)).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("access_token");
-        _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns("refresh_token");
-        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+        _sessionRepoMock.Setup(r => r.AddAsync(It.IsAny<Session>()))
+            .Callback<Session>(s => captured = s)
+            .Returns(Task.CompletedTask);
 
         var (response, refreshToken) = await _sut.LoginAsync(request);
 
         Assert.Equal("access_token", response.AccessToken);
         Assert.Equal(user.Id, response.User.Id);
-        Assert.Equal("refresh_token", refreshToken);
+        Assert.NotEmpty(refreshToken);
+        Assert.NotNull(captured);
+        Assert.Equal(user.Id, captured!.UserId);
+        Assert.Equal(refreshToken, captured.RefreshToken.Value);
+        _sessionRepoMock.Verify(r => r.AddAsync(It.IsAny<Session>()), Times.Once);
     }
 
     [Fact]
@@ -120,31 +128,68 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task Logout_正常にセッションが削除される()
+    {
+        var token = RefreshToken.Generate(DateTime.UtcNow, TimeSpan.FromDays(7));
+        var session = Session.Start(Guid.NewGuid(), token, DateTime.UtcNow);
+
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync(token.Value)).ReturnsAsync(session);
+        _sessionRepoMock.Setup(r => r.DeleteAsync(session)).Returns(Task.CompletedTask);
+
+        await _sut.LogoutAsync(token.Value);
+
+        _sessionRepoMock.Verify(r => r.DeleteAsync(session), Times.Once);
+    }
+
+    [Fact]
+    public async Task Logout_セッションが存在しなければ何もしない()
+    {
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync(It.IsAny<string>()))
+            .ReturnsAsync((Session?)null);
+
+        await _sut.LogoutAsync("unknown_refresh");
+
+        _sessionRepoMock.Verify(r => r.DeleteAsync(It.IsAny<Session>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Refresh_正常に新トークンが発行される()
     {
+        var now = DateTime.UtcNow;
         var user = UserTestFactory.CreateActivated("test@example.com", "testuser");
-        user.RefreshToken = "old_refresh";
-        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7);
+        var oldToken = RefreshToken.Generate(now, TimeSpan.FromDays(7));
+        var session = Session.Start(user.Id, oldToken, now);
 
-        _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("old_refresh")).ReturnsAsync(user);
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync(oldToken.Value)).ReturnsAsync(session);
+        _userRepoMock.Setup(r => r.GetByIdAsync(session.UserId)).ReturnsAsync(user);
         _jwtServiceMock.Setup(j => j.GenerateAccessToken(user)).Returns("new_access_token");
-        _jwtServiceMock.Setup(j => j.GenerateRefreshToken()).Returns("new_refresh_token");
-        _userRepoMock.Setup(r => r.UpdateAsync(user)).Returns(Task.CompletedTask);
+        _sessionRepoMock.Setup(r => r.UpdateAsync(session)).Returns(Task.CompletedTask);
 
-        var (response, newRefreshToken) = await _sut.RefreshAsync("old_refresh");
+        var (response, newRefreshToken) = await _sut.RefreshAsync(oldToken.Value);
 
         Assert.Equal("new_access_token", response.AccessToken);
-        Assert.Equal("new_refresh_token", newRefreshToken);
+        Assert.NotEmpty(newRefreshToken);
+        Assert.NotEqual(oldToken.Value, newRefreshToken);
+        Assert.Equal(newRefreshToken, session.RefreshToken.Value);
+        _sessionRepoMock.Verify(r => r.UpdateAsync(session), Times.Once);
+    }
+
+    [Fact]
+    public async Task Refresh_無効なトークンでValidationException()
+    {
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync(It.IsAny<string>()))
+            .ReturnsAsync((Session?)null);
+
+        await Assert.ThrowsAsync<ValidationException>(() => _sut.RefreshAsync("invalid_refresh"));
     }
 
     [Fact]
     public async Task Refresh_期限切れトークンでValidationException()
     {
-        var user = UserTestFactory.CreateActivated();
-        user.RefreshToken = "expired_refresh";
-        user.RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(-1);
+        var expiredToken = RefreshToken.FromStorage("expired_refresh", DateTime.UtcNow.AddDays(-1));
+        var session = Session.Start(Guid.NewGuid(), expiredToken, DateTime.UtcNow.AddDays(-8));
 
-        _userRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("expired_refresh")).ReturnsAsync(user);
+        _sessionRepoMock.Setup(r => r.GetByRefreshTokenForUpdateAsync("expired_refresh")).ReturnsAsync(session);
 
         await Assert.ThrowsAsync<ValidationException>(() => _sut.RefreshAsync("expired_refresh"));
     }
