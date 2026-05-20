@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using RunRoutes.Core.Common.Exceptions;
 
+namespace RunRoutes.Core.Users;
+
 public sealed record EmailAddress
 {
     public string Value { get; }
