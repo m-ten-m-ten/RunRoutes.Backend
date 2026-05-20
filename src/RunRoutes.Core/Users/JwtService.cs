@@ -35,9 +35,4 @@ public class JwtService(IOptions<JwtSettings> settings) : IJwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-
-    public string GenerateRefreshToken()
-    {
-        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-    }
 }
