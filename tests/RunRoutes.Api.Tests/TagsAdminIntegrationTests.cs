@@ -3,10 +3,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Common;
-using RunRoutes.Core.DTOs.Tags;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tags.Dtos;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;
@@ -38,28 +39,8 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
         db.Users.RemoveRange(db.Users);
         db.SaveChanges();
 
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = AdminEmail,
-            Username = "tagadmin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
-            IsActive = true,
-            Role = UserRole.Admin,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = UserEmail,
-            Username = "taguser",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
-            IsActive = true,
-            Role = UserRole.User,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
+        db.Users.Add(TestUserBuilder.CreateActivated(AdminEmail, "tagadmin", Password, UserRole.Admin));
+        db.Users.Add(TestUserBuilder.CreateActivated(UserEmail, "taguser", Password));
         db.SaveChanges();
     }
 
@@ -228,28 +209,26 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var admin = db.Users.First(u => u.Email == AdminEmail);
+        var admin = db.Users.First(u => u.Email.Value == AdminEmail);
         var tag = db.Tags.First(t => t.Id == tagId);
 
-        var course = new Course
-        {
-            Id = Guid.NewGuid(),
-            UserId = admin.Id,
-            Title = "sample",
-            Difficulty = "easy",
-            Route = new LineString([new Coordinate(139.0, 35.0), new Coordinate(139.1, 35.1)])
-            {
-                SRID = 4326,
-            },
-            DistanceM = 100.0,
-            IsPublic = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Tags = [tag],
-        };
+        var course = Course.Create(
+            userId: admin.Id,
+            title: "sample",
+            description: null,
+            difficulty: Difficulty.Easy,
+            route: new LineString([new Coordinate(139.0, 35.0), new Coordinate(139.1, 35.1)]) { SRID = 4326 },
+            isPublic: true,
+            tags: [tag]);
+
         db.Courses.Add(course);
         db.SaveChanges();
     }
 
     private record LoginResult(string AccessToken);
+
+    private static void SetPrivate<T>(T target, string propertyName, object value) where T : class
+    {
+        typeof(T).GetProperty(propertyName)!.SetValue(target, value);
+    }
 }

@@ -25,10 +25,53 @@ namespace RunRoutes.Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Comment", b =>
+            modelBuilder.Entity("RunRoutes.Core.Audit.AuditLogEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_id");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("target_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("TargetType", "TargetId");
+
+                    b.ToTable("audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("RunRoutes.Core.Courses.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -45,7 +88,7 @@ namespace RunRoutes.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
@@ -62,10 +105,9 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("comments", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -82,7 +124,7 @@ namespace RunRoutes.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("difficulty");
 
-                    b.Property<double>("DistanceM")
+                    b.Property<double>("Distance")
                         .HasColumnType("double precision")
                         .HasColumnName("distance_m");
 
@@ -115,10 +157,30 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("courses", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Tag", b =>
+            modelBuilder.Entity("RunRoutes.Core.Sessions.Session", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("sessions", (string)null);
+                });
+
+            modelBuilder.Entity("RunRoutes.Core.Tags.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -145,20 +207,11 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("tags", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.User", b =>
+            modelBuilder.Entity("RunRoutes.Core.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<string>("ActivationToken")
-                        .HasColumnType("text")
-                        .HasColumnName("activation_token");
-
-                    b.Property<DateTime?>("ActivationTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("activation_token_expires_at");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -169,14 +222,6 @@ namespace RunRoutes.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<string>("EmailChangeToken")
-                        .HasColumnType("text")
-                        .HasColumnName("email_change_token");
-
-                    b.Property<DateTime?>("EmailChangeTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("email_change_token_expires_at");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -185,18 +230,6 @@ namespace RunRoutes.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
-
-                    b.Property<string>("PendingEmail")
-                        .HasColumnType("text")
-                        .HasColumnName("pending_email");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text")
-                        .HasColumnName("refresh_token");
-
-                    b.Property<DateTime?>("RefreshTokenExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("refresh_token_expires_at");
 
                     b.Property<int>("Role")
                         .ValueGeneratedOnAdd()
@@ -239,15 +272,15 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.ToTable("course_tags", (string)null);
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Comment", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Comment", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.Course", "Course")
+                    b.HasOne("RunRoutes.Core.Courses.Course", "Course")
                         .WithMany("Comments")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RunRoutes.Core.Entities.User", "User")
+                    b.HasOne("RunRoutes.Core.Users.User", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -258,9 +291,9 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.User", "User")
+                    b.HasOne("RunRoutes.Core.Users.User", "User")
                         .WithMany("Courses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -269,27 +302,120 @@ namespace RunRoutes.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("RunRoutes.Core.Sessions.Session", b =>
+                {
+                    b.HasOne("RunRoutes.Core.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("RunRoutes.Core.Sessions.RefreshToken", "RefreshToken", b1 =>
+                        {
+                            b1.Property<Guid>("SessionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("refresh_token_expires_at");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("refresh_token");
+
+                            b1.HasKey("SessionId");
+
+                            b1.HasIndex("Value")
+                                .IsUnique();
+
+                            b1.ToTable("sessions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SessionId");
+                        });
+
+                    b.Navigation("RefreshToken")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("RunRoutes.Core.Users.User", b =>
+                {
+                    b.OwnsOne("RunRoutes.Core.Users.ActivationToken", "Activation", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("activation_token_expires_at");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("activation_token");
+
+                            b1.HasKey("UserId");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.OwnsOne("RunRoutes.Core.Users.EmailChangeRequest", "EmailChange", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("email_change_token_expires_at");
+
+                            b1.Property<string>("NewEmail")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("pending_email");
+
+                            b1.Property<string>("Token")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("email_change_token");
+
+                            b1.HasKey("UserId");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Activation");
+
+                    b.Navigation("EmailChange");
+                });
+
             modelBuilder.Entity("course_tags", b =>
                 {
-                    b.HasOne("RunRoutes.Core.Entities.Course", null)
+                    b.HasOne("RunRoutes.Core.Courses.Course", null)
                         .WithMany()
                         .HasForeignKey("course_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RunRoutes.Core.Entities.Tag", null)
+                    b.HasOne("RunRoutes.Core.Tags.Tag", null)
                         .WithMany()
                         .HasForeignKey("tag_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.Course", b =>
+            modelBuilder.Entity("RunRoutes.Core.Courses.Course", b =>
                 {
                     b.Navigation("Comments");
                 });
 
-            modelBuilder.Entity("RunRoutes.Core.Entities.User", b =>
+            modelBuilder.Entity("RunRoutes.Core.Users.User", b =>
                 {
                     b.Navigation("Comments");
 

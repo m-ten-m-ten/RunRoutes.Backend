@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RunRoutes.Core.Entities;
+using RunRoutes.Core.Courses;
 
 namespace RunRoutes.Infrastructure.Configurations;
 
@@ -11,12 +11,12 @@ public class CommentConfiguration : IEntityTypeConfiguration<Comment>
         builder.ToTable("comments");
 
         builder.HasKey(c => c.Id);
-        builder.Property(c => c.Id).HasColumnName("id");
+        builder.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
         builder.Property(c => c.CourseId).HasColumnName("course_id");
         builder.Property(c => c.UserId).HasColumnName("user_id");
         builder.Property(c => c.Body).HasColumnName("body");
         builder.Property(c => c.CreatedAt).HasColumnName("created_at");
-        builder.Property(c => c.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(c => c.UpdatedAt).HasColumnName("updated_at").IsRequired(false);
 
         builder.HasOne(c => c.Course)
             .WithMany(course => course.Comments)

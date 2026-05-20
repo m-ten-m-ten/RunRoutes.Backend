@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using RunRoutes.Core.Interfaces.Services;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;

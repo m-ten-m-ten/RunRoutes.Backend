@@ -88,6 +88,9 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 !.vscode/settings.json.example
 
+# Claude Code
+*.lscache
+
 ## Misc ##
 *.log
 *.tmp

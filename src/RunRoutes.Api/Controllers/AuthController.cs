@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RunRoutes.Api.Extensions;
-using RunRoutes.Core.DTOs.Auth;
-using RunRoutes.Core.Interfaces.Services;
-using RunRoutes.Core.Settings;
 using Microsoft.Extensions.Options;
+using RunRoutes.Api.Extensions;
+using RunRoutes.Core.Settings;
+using RunRoutes.Core.Users;
+using RunRoutes.Core.Users.Dtos;
 
 namespace RunRoutes.Api.Controllers;
 
@@ -51,7 +51,7 @@ public class AuthController(IAuthService authService, IOptions<JwtSettings> jwtS
     public async Task<IActionResult> Refresh()
     {
         var refreshToken = Request.Cookies["refreshToken"]
-            ?? throw new Core.Exceptions.ValidationException("リフレッシュトークンがありません");
+            ?? throw new Core.Common.Exceptions.ValidationException("リフレッシュトークンがありません");
 
         var (result, newRefreshToken) = await authService.RefreshAsync(refreshToken);
         Response.Cookies.Append("refreshToken", newRefreshToken, BuildRefreshCookieOptions());

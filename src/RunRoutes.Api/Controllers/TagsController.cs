@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RunRoutes.Core.DTOs.Tags;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Interfaces.Services;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tags.Dtos;
 
 namespace RunRoutes.Api.Controllers;
 

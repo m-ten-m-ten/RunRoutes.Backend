@@ -1,9 +1,7 @@
 using Moq;
-using RunRoutes.Core.DTOs.Tags;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tags.Dtos;
 
 namespace RunRoutes.Core.Tests;
 
@@ -17,13 +15,12 @@ public class TagServiceTests
         _sut = new TagService(_tagRepoMock.Object);
     }
 
-    private static Tag MakeTag(string name = "trail", uint version = 1, Guid? id = null) => new()
-    {
-        Id = id ?? Guid.NewGuid(),
-        Name = name,
-        CreatedAt = DateTime.UtcNow,
-        Version = version,
-    };
+    private static Tag MakeTag(string name = "trail", uint version = 1, Guid? id = null) =>
+        Tag.Reconstruct(
+            id: id ?? Guid.NewGuid(),
+            name: name,
+            createdAt: DateTime.UtcNow,
+            version: version);
 
     [Fact]
     public async Task Create_正常に作成できる()

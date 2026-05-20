@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Courses;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Interfaces.Repositories;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Tags;
 using RunRoutes.Infrastructure.Data;
+using RunRoutes.Infrastructure.Repositories.Projections;
 
 namespace RunRoutes.Infrastructure.Repositories;
 
@@ -16,7 +17,13 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
             .Where(c => c.IsPublic || c.UserId == currentUserId);
 
         if (query.Difficulty is not null)
-            q = q.Where(c => c.Difficulty == query.Difficulty);
+        {
+            if (Enum.TryParse<Difficulty>(query.Difficulty, ignoreCase: true, out var parsedDifficulty)
+                && Enum.IsDefined(typeof(Difficulty), parsedDifficulty))
+                q = q.Where(c => c.Difficulty == parsedDifficulty);
+            else
+                q = q.Where(c => false);
+        }
 
         if (query.TagIds is not null && query.TagIds.Any())
             q = q.Where(c => c.Tags.Any(t => query.TagIds.Contains(t.Id)));
@@ -29,11 +36,11 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
 
         var totalCount = await q.CountAsync();
 
-        var courses = await q
+        var projections = await q
             .OrderByDescending(c => c.CreatedAt)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .Select(c => new Course
+            .Select(c => new CourseProjection
             {
                 Id = c.Id,
                 UserId = c.UserId,
@@ -41,24 +48,33 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 Description = c.Description,
                 Difficulty = c.Difficulty,
                 Route = c.Route,
-                DistanceM = c.DistanceM,
+                Distance = c.Distance,
                 IsPublic = c.IsPublic,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
                 User = c.User,
-                Tags = c.Tags.ToList(),
+                Tags = c.Tags.Select(t => new TagProjection
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CreatedAt = t.CreatedAt,
+                    Version = t.Version,
+                }).ToList(),
                 CommentCount = c.Comments.Count,
+                // 一覧では Comments は不要なので空
             })
             .ToListAsync();
 
+        var courses = projections.Select(p => p.ToDomain()).ToList();
         return (courses, totalCount);
     }
 
-    public Task<Course?> GetByIdAsync(Guid id) =>
-        db.Courses
+    public async Task<Course?> GetByIdAsync(Guid id)
+    {
+        var projection = await db.Courses
             .AsNoTracking()
             .Where(c => c.Id == id)
-            .Select(c => new Course
+            .Select(c => new CourseProjection
             {
                 Id = c.Id,
                 UserId = c.UserId,
@@ -66,20 +82,43 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
                 Description = c.Description,
                 Difficulty = c.Difficulty,
                 Route = c.Route,
-                DistanceM = c.DistanceM,
+                Distance = c.Distance,
                 IsPublic = c.IsPublic,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
                 User = c.User,
-                Tags = c.Tags.ToList(),
+                Tags = c.Tags.Select(t => new TagProjection
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CreatedAt = t.CreatedAt,
+                    Version = t.Version,
+                }).ToList(),
                 CommentCount = c.Comments.Count,
+                Comments = c.Comments
+                    .OrderBy(cm => cm.CreatedAt)
+                    .Select(cm => new CommentProjection
+                    {
+                        Id = cm.Id,
+                        CourseId = cm.CourseId,
+                        UserId = cm.UserId,
+                        Body = cm.Body,
+                        CreatedAt = cm.CreatedAt,
+                        UpdatedAt = cm.UpdatedAt,
+                        User = cm.User,
+                    })
+                    .ToList(),
             })
             .FirstOrDefaultAsync();
+
+        return projection?.ToDomain();
+    }
 
     public Task<Course?> GetByIdForUpdateAsync(Guid id) =>
         db.Courses
             .Include(c => c.User)
             .Include(c => c.Tags)
+            .Include(c => c.Comments).ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.Id == id);
 
     public Task<bool> ExistsByIdAsync(Guid id) =>
@@ -93,7 +132,6 @@ public class CourseRepository(AppDbContext db) : ICourseRepository
 
     public async Task UpdateAsync(Course course)
     {
-        db.Courses.Update(course);
         await db.SaveChangesAsync();
     }
 

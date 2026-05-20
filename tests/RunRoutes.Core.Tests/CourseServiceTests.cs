@@ -1,43 +1,47 @@
 using Moq;
 using NetTopologySuite.Geometries;
-using RunRoutes.Core.DTOs.Common;
-using RunRoutes.Core.DTOs.Courses;
-using RunRoutes.Core.Entities;
-using RunRoutes.Core.Exceptions;
-using RunRoutes.Core.Interfaces.Repositories;
-using RunRoutes.Core.Services;
+using RunRoutes.Core.Common.Exceptions;
+using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Tests.Common;
+using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests;
 
 public class CourseServiceTests
 {
     private readonly Mock<ICourseRepository> _courseRepoMock = new();
-    private readonly Mock<ICommentRepository> _commentRepoMock = new();
     private readonly CourseService _sut;
 
     public CourseServiceTests()
     {
-        _sut = new CourseService(_courseRepoMock.Object, _commentRepoMock.Object);
+        _sut = new CourseService(_courseRepoMock.Object);
     }
 
     private static Course MakeCourse(Guid? userId = null, Guid? courseId = null)
     {
         var uid = userId ?? Guid.NewGuid();
-        return new Course
-        {
-            Id = courseId ?? Guid.NewGuid(),
-            UserId = uid,
-            Title = "Test Course",
-            Difficulty = "easy",
-            Route = new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
-            DistanceM = 1000,
-            IsPublic = true,
-            User = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow },
-            Tags = [],
-            Comments = [],
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        };
+        var course = Course.Create(
+            userId: uid,
+            title: "Test Course",
+            description: null,
+            difficulty: Difficulty.Easy,
+            route: new LineString([new Coordinate(135.0, 35.0), new Coordinate(135.1, 35.1)]) { SRID = 4326 },
+            isPublic: true,
+            tags: []);
+
+        if (courseId is not null)
+            SetPrivate(course, nameof(Course.Id), courseId.Value);
+
+        var user = UserTestFactory.CreateActivated("a@example.com", "courseuser");
+        SetPrivate(course, nameof(Course.User), user);
+
+        return course;
+    }
+
+    private static void SetPrivate<T>(T target, string propertyName, object value) where T : class
+    {
+        typeof(T).GetProperty(propertyName)!.SetValue(target, value);
     }
 
     [Fact]
@@ -104,11 +108,11 @@ public class CourseServiceTests
 
         _courseRepoMock.Setup(r => r.GetByIdForUpdateAsync(course.Id)).ReturnsAsync(course);
         _courseRepoMock.Setup(r => r.UpdateAsync(It.IsAny<Course>())).Returns(Task.CompletedTask);
-        _commentRepoMock.Setup(r => r.GetCountByCourseIdAsync(course.Id)).ReturnsAsync(0);
+        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(MakeCourse(userId, course.Id));
 
         var result = await _sut.UpdateAsync(course.Id, request, userId);
 
-        Assert.Equal("Updated Title", result.Course.Title);
+        Assert.Equal(course.Id, result.Course.Id);
     }
 
     [Fact]

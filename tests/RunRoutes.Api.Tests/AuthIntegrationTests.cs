@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
-using RunRoutes.Core.Entities;
+using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Data;
 
 namespace RunRoutes.Api.Tests;
@@ -23,18 +23,9 @@ public class AuthIntegrationTests : IClassFixture<TestWebApplicationFactory>
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        if (!db.Users.Any(u => u.Email == TestEmail))
+        if (!db.Users.Any(u => u.Email.Value == TestEmail))
         {
-            db.Users.Add(new User
-            {
-                Id = Guid.NewGuid(),
-                Email = TestEmail,
-                Username = "integtestuser",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(TestPassword),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            });
+            db.Users.Add(TestUserBuilder.CreateActivated(TestEmail, "integtestuser", TestPassword));
             db.SaveChanges();
         }
     }
