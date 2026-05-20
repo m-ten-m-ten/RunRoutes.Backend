@@ -3,6 +3,7 @@ using NetTopologySuite.Geometries;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests;
@@ -21,7 +22,7 @@ public class CommentServiceTests
     {
         var uid = ownerId ?? Guid.NewGuid();
         var cid = courseId ?? Guid.NewGuid();
-        var user = new User { Id = uid, Email = "a@example.com", Username = "user", CreatedAt = DateTime.UtcNow };
+        var user = UserTestFactory.CreateActivated("a@example.com", "courseuser");
 
         // comments を持つテスト用 Course は Reconstruct 経由で組み立てる(論点 B-3)
         if (comments is not null)

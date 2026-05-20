@@ -33,17 +33,7 @@ public class AuditLogIntegrationTests : IClassFixture<TestWebApplicationFactory>
         db.Users.RemoveRange(db.Users);
         db.SaveChanges();
 
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = UserEmail,
-            Username = "audituser",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
-            IsActive = true,
-            Role = UserRole.User,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
+        db.Users.Add(TestUserBuilder.CreateActivated(UserEmail, "audituser", Password));
         db.SaveChanges();
     }
 
@@ -63,7 +53,7 @@ public class AuditLogIntegrationTests : IClassFixture<TestWebApplicationFactory>
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var userId = db.Users.First(u => u.Email == UserEmail).Id;
+        var userId = db.Users.First(u => u.Email.Value == UserEmail).Id;
         return (client, userId);
     }
 

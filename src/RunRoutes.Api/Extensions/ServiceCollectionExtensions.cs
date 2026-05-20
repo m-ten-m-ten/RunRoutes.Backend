@@ -1,8 +1,10 @@
 using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.DomainEvents;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
+using RunRoutes.Infrastructure.Auth;
 using RunRoutes.Infrastructure.DomainEvents;
 using RunRoutes.Infrastructure.Repositories;
 using RunRoutes.Infrastructure.Services;
@@ -13,9 +15,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICourseRepository, CourseRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<ISessionRepository, SessionRepository>();
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();

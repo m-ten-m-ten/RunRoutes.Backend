@@ -130,7 +130,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
 
     private static CourseListItemDto ToCourseListItemDto(Course c) => new(
         c.Id, c.Title, c.Difficulty.ToString().ToLowerInvariant(), c.Distance.Meters, c.IsPublic,
-        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
+        new UserDto(c.User.Id, c.User.Email.Value, c.User.Username.Value, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
         c.CommentCount,
         c.CreatedAt
@@ -139,7 +139,7 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
     private static CourseDetailDto ToCourseDetailDto(Course c) => new(
         c.Id, c.Title, c.Description, c.Difficulty.ToString().ToLowerInvariant(), c.Distance.Meters, c.IsPublic,
         new GeoJsonLineStringDto("LineString", c.Route.Coordinates.Select(coord => new[] { coord.X, coord.Y })),
-        new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt),
+        new UserDto(c.User.Id, c.User.Email.Value, c.User.Username.Value, c.User.Role.ToString(), c.User.CreatedAt),
         c.Tags.Select(t => new TagDto(t.Id, t.Name)),
         c.CommentCount,
         c.CreatedAt,

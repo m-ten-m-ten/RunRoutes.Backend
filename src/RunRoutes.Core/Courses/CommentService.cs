@@ -50,7 +50,7 @@ public class CommentService(ICourseRepository courseRepository) : ICommentServic
     {
         UserDto user = c.User is null
             ? new UserDto(c.UserId, string.Empty, string.Empty, UserRole.User.ToString(), DateTime.MinValue)
-            : new UserDto(c.User.Id, c.User.Email, c.User.Username, c.User.Role.ToString(), c.User.CreatedAt);
+            : new UserDto(c.User.Id, c.User.Email.Value, c.User.Username.Value, c.User.Role.ToString(), c.User.CreatedAt);
         return new CommentDto(c.Id, c.Body, user, c.CreatedAt, c.UpdatedAt, c.IsEdited);
     }
 }

@@ -3,6 +3,7 @@ using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Events;
 using RunRoutes.Core.Tags;
+using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 
 namespace RunRoutes.Core.Tests.Courses;
@@ -61,7 +62,7 @@ public class CourseDomainTests
         var userId = Guid.NewGuid();
         var createdAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var updatedAt = createdAt.AddDays(1);
-        var user = new User { Id = userId, Email = "a@example.com", Username = "u", CreatedAt = DateTime.UtcNow };
+        var user = UserTestFactory.CreateActivated("a@example.com", "courseuser");
 
         var course = Course.Reconstruct(
             id: id,
@@ -346,7 +347,7 @@ public class CourseDomainTests
     }
 
     // ========================================
-    // コレクション不変性(Phase 6 で重要)
+    // コレクション不変性
     // ========================================
 
     [Fact]

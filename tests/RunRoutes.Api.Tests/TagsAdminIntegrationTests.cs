@@ -39,28 +39,8 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
         db.Users.RemoveRange(db.Users);
         db.SaveChanges();
 
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = AdminEmail,
-            Username = "tagadmin",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
-            IsActive = true,
-            Role = UserRole.Admin,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
-        db.Users.Add(new User
-        {
-            Id = Guid.NewGuid(),
-            Email = UserEmail,
-            Username = "taguser",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password),
-            IsActive = true,
-            Role = UserRole.User,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-        });
+        db.Users.Add(TestUserBuilder.CreateActivated(AdminEmail, "tagadmin", Password, UserRole.Admin));
+        db.Users.Add(TestUserBuilder.CreateActivated(UserEmail, "taguser", Password));
         db.SaveChanges();
     }
 
@@ -229,7 +209,7 @@ public class TagsAdminIntegrationTests : IClassFixture<TestWebApplicationFactory
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var admin = db.Users.First(u => u.Email == AdminEmail);
+        var admin = db.Users.First(u => u.Email.Value == AdminEmail);
         var tag = db.Tags.First(t => t.Id == tagId);
 
         var course = Course.Create(
