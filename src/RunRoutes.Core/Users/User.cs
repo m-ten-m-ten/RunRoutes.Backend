@@ -6,25 +6,17 @@ namespace RunRoutes.Core.Users;
 
 public class User : AggregateRoot
 {
-    // === Step 2 で private set 化(このステップで触る範囲) ===
     public Guid Id { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public UserRole Role { get; private set; } = UserRole.User;
-    public ActivationToken? Activation { get; private set; }  // ★ VO に統合
-
-    // === Step 3 で private set 化 ===
+    public ActivationToken? Activation { get; private set; }
     public EmailAddress Email { get; private set; } = null!;
     public EmailChangeRequest? EmailChange { get; private set; }
-
-    // === Step 4 で新たに private set 化 ===
     public Username Username { get; private set; } = null!;
     public HashedPassword PasswordHash { get; private set; } = null!;
     public bool IsActive { get; private set; }
-
-    // === Step 5 で削除/private set 化予定なので public set 据え置き ===
     public DateTime UpdatedAt { get; private set; }
 
-    // === Step 5 で private set 化予定(EF Core が触るのみなので最終で十分) ===
     public ICollection<Course> Courses { get; private set; } = [];
     public ICollection<Comment> Comments { get; private set; } = [];
 
