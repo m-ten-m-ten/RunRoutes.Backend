@@ -92,6 +92,16 @@ public class AuthController(IAuthService authService, IOptions<JwtSettings> jwtS
         return NoContent();
     }
 
+    [HttpDelete("me")]
+    [Authorize]
+    public async Task<IActionResult> RemoveMe()
+    {
+        var userId = User.GetUserId();
+        var result = await authService.RemoveMeAsync(userId);
+        Response.Cookies.Delete("refreshToken", new CookieOptions { Path = "/api/auth" });
+        return Ok(result);
+    }
+
     private CookieOptions BuildRefreshCookieOptions() => new()
     {
         HttpOnly = true,
