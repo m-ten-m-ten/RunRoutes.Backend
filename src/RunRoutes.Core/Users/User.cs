@@ -1,6 +1,7 @@
 using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Users.Events;
 
 namespace RunRoutes.Core.Users;
 
@@ -112,5 +113,10 @@ public class User : AggregateRoot
 
         PasswordHash = hasher.Hash(newPassword);
         UpdatedAt = now;
+    }
+
+    public void MarkForRemoval(DateTime now)
+    {
+        AddDomainEvent(new UserRemovedEvent(Id, now));
     }
 }

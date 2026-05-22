@@ -13,4 +13,5 @@ public interface IAuthService
     Task<UpdateMeResponse> UpdateMeAsync(Guid userId, UpdateMeRequest request);
     Task<UpdateEmailResponse> UpdateEmailAsync(Guid userId, UpdateEmailRequest request);
     Task ActivateEmailAsync(string token);
+    Task<DeleteAccountResponse> RemoveMeAsync(Guid userId);
 }
