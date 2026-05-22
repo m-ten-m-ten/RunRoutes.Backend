@@ -172,6 +172,17 @@ public class AuthService(
         await _userRepository.UpdateAsync(user);
     }
 
+    public async Task<DeleteAccountResponse> RemoveMeAsync(Guid userId)
+    {
+        var user = await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException("ユーザーが見つかりません");
+
+        user.MarkForRemoval(DateTime.UtcNow);
+        await _userRepository.RemoveAsync(user);
+
+        return new DeleteAccountResponse("アカウントを削除しました");
+    }
+
     private static UserDto ToUserDto(User user) =>
         new(user.Id, user.Email.Value, user.Username.Value, user.Role.ToString(), user.CreatedAt);
 }

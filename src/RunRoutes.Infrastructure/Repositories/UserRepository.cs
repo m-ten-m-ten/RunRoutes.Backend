@@ -47,4 +47,10 @@ public class UserRepository(AppDbContext db) : IUserRepository
         db.Users.Update(user);
         await db.SaveChangesAsync();
     }
+
+    public async Task RemoveAsync(User user)
+    {
+        db.Users.Remove(user);
+        await db.SaveChangesAsync();
+    }
 }

@@ -1,6 +1,7 @@
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
+using RunRoutes.Core.Users.Events;
 
 namespace RunRoutes.Core.Tests.Users;
 
@@ -343,5 +344,39 @@ public class UserDomainTests
             TimeSpan.FromHours(24));
 
         Assert.False(user.VerifyPassword(PlainPassword.Create("wrong_password"), _hasher));
+    }
+
+    // ========================================
+    // User.MarkForRemoval
+    // ========================================
+
+    [Fact]
+    public void MarkForRemoval_UserRemovedEventがDomainEventsに追加される()
+    {
+        var now = DateTime.UtcNow;
+        var user = UserTestFactory.CreateActivated();
+
+        user.MarkForRemoval(now);
+
+        var evt = Assert.Single(user.DomainEvents.OfType<UserRemovedEvent>());
+        Assert.Equal(user.Id, evt.UserId);
+        Assert.Equal(now, evt.OccurredAt);
+    }
+
+    [Fact]
+    public void MarkForRemoval_可変フィールドは変更されない()
+    {
+        var user = UserTestFactory.CreateActivated();
+        var originalUpdatedAt = user.UpdatedAt;
+        var originalIsActive = user.IsActive;
+        var originalEmail = user.Email;
+        var originalUsername = user.Username;
+
+        user.MarkForRemoval(DateTime.UtcNow.AddMinutes(10));
+
+        Assert.Equal(originalUpdatedAt, user.UpdatedAt);
+        Assert.Equal(originalIsActive, user.IsActive);
+        Assert.Equal(originalEmail, user.Email);
+        Assert.Equal(originalUsername, user.Username);
     }
 }

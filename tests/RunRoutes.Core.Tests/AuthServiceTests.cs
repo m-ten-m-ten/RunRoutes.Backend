@@ -6,6 +6,7 @@ using RunRoutes.Core.Settings;
 using RunRoutes.Core.Tests.Common;
 using RunRoutes.Core.Users;
 using RunRoutes.Core.Users.Dtos;
+using RunRoutes.Core.Users.Events;
 
 namespace RunRoutes.Core.Tests;
 
@@ -336,5 +337,32 @@ public class AuthServiceTests
         _userRepoMock.Setup(r => r.GetByIdForUpdateAsync(user.Id)).ReturnsAsync(user);
 
         await Assert.ThrowsAsync<ValidationException>(() => _sut.UpdateMeAsync(user.Id, request));
+    }
+
+    [Fact]
+    public async Task RemoveMe_正常に削除されDeleteAccountResponseが返る()
+    {
+        var user = UserTestFactory.CreateActivated("delete@example.com", "deleteuser");
+        _userRepoMock.Setup(r => r.GetByIdAsync(user.Id)).ReturnsAsync(user);
+        _userRepoMock.Setup(r => r.RemoveAsync(user)).Returns(Task.CompletedTask);
+
+        var response = await _sut.RemoveMeAsync(user.Id);
+
+        Assert.Equal("アカウントを削除しました", response.Message);
+        _userRepoMock.Verify(r => r.RemoveAsync(It.Is<User>(u =>
+            u.Id == user.Id &&
+            u.DomainEvents.OfType<UserRemovedEvent>().Any(e => e.UserId == user.Id)
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemoveMe_存在しないユーザーでNotFoundException()
+    {
+        var userId = Guid.NewGuid();
+        _userRepoMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync((User?)null);
+
+        await Assert.ThrowsAsync<NotFoundException>(() => _sut.RemoveMeAsync(userId));
+
+        _userRepoMock.Verify(r => r.RemoveAsync(It.IsAny<User>()), Times.Never);
     }
 }

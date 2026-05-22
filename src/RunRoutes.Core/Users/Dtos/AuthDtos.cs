@@ -10,3 +10,4 @@ public record UpdateMeRequest(string? Username, string? CurrentPassword, string?
 public record UpdateMeResponse(UserDto User);
 public record UpdateEmailRequest(string NewEmail, string CurrentPassword);
 public record UpdateEmailResponse(string Message);
+public record DeleteAccountResponse(string Message);
