@@ -1,12 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RunRoutes.Core.Settings;
+using RunRoutes.Core.Users;
 
-namespace RunRoutes.Core.Users;
+namespace RunRoutes.Infrastructure.Auth;
 
 public class JwtService(IOptions<JwtSettings> settings) : IJwtService
 {
