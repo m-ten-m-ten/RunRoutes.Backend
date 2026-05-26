@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RunRoutes.Api.Extensions;
+using RunRoutes.Core.Common.Queries;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Dtos;
+using RunRoutes.Core.Courses.Queries.GetCourseById;
 
 namespace RunRoutes.Api.Controllers;
 
 [ApiController]
 [Route("api/courses")]
-public class CoursesController(ICourseService courseService) : ControllerBase
+public class CoursesController(ICourseService courseService, IQueryDispatcher queryDispatcher) : ControllerBase
 {
+    private readonly IQueryDispatcher _queryDispatcher = queryDispatcher;
+
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetCoursesQuery query)
     {
@@ -22,8 +26,9 @@ public class CoursesController(ICourseService courseService) : ControllerBase
     public async Task<IActionResult> GetById(Guid id)
     {
         Guid? currentUserId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
-        var result = await courseService.GetByIdAsync(id, currentUserId);
-        return Ok(result);
+        var dto = await _queryDispatcher.SendAsync(new GetCourseByIdQuery(id, currentUserId));
+        if (dto is null) return NotFound();
+        return Ok(dto);
     }
 
     [HttpPost]

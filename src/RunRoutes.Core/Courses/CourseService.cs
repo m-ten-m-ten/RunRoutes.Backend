@@ -17,17 +17,6 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         return new GetCoursesResponse(items, totalCount, query.Page, query.PageSize);
     }
 
-    public async Task<GetCourseResponse> GetByIdAsync(Guid id, Guid? currentUserId)
-    {
-        var course = await _courseRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException("コースが見つかりません");
-
-        if (!course.IsPublic && course.UserId != currentUserId)
-            throw new ForbiddenException("このコースにアクセスする権限がありません");
-
-        return new GetCourseResponse(ToCourseDetailDto(course));
-    }
-
     public async Task<CreateCourseResponse> CreateAsync(CreateCourseRequest request, Guid userId)
     {
         var difficulty = ParseDifficulty(request.Difficulty);
