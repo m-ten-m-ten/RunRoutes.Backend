@@ -8,7 +8,7 @@ namespace RunRoutes.Infrastructure.Tests.Infrastructure;
 
 public class PostgresContainerFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgis/postgis:17-3.3")
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder("postgis/postgis:17-3.5")
         .WithDatabase("runroutes_test")
         .WithUsername("test")
         .WithPassword("test")
