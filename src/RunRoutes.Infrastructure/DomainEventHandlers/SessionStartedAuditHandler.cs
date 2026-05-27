@@ -20,7 +20,7 @@ public class SessionStartedAuditHandler(AppDbContext db, ICurrentUserService cur
             actorId: _currentUser.UserId,
             targetType: "Session",
             targetId: domainEvent.SessionId,
-            payload: JsonSerializer.Serialize(new { domainEvent.UserId }),
+            payload: JsonSerializer.Serialize(new { userId = domainEvent.UserId }),
             occurredAt: domainEvent.OccurredAt
         );
 
