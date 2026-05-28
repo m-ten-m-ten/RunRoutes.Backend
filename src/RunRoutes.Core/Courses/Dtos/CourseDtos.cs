@@ -9,6 +9,7 @@ public record CourseListItemDto(Guid Id, string Title, string Difficulty, double
 public record CourseDetailDto(Guid Id, string Title, string? Description, string Difficulty, double DistanceM, bool IsPublic, GeoJsonLineStringDto Route, UserDto User, IEnumerable<TagDto> Tags, int CommentCount, DateTime CreatedAt, DateTime UpdatedAt);
 public record GetCourseResponse(CourseDetailDto Course);
 public record CreateCourseRequest(string Title, string? Description, string Difficulty, bool IsPublic, GeoJsonLineStringDto? Route, string? GpxXml, IEnumerable<Guid> TagIds);
-public record CreateCourseResponse(CourseDetailDto Course);
+public record CreateCourseResponse(CreateCourseDto Course);
+public record CreateCourseDto(Guid Id);
 public record UpdateCourseRequest(string? Title, string? Description, string? Difficulty, bool? IsPublic, GeoJsonLineStringDto? Route, string? GpxXml, IEnumerable<Guid>? TagIds);
 public record UpdateCourseResponse(CourseDetailDto Course);
