@@ -17,27 +17,6 @@ public class CourseService(ICourseRepository courseRepository) : ICourseService
         return new GetCoursesResponse(items, totalCount, query.Page, query.PageSize);
     }
 
-    public async Task<CreateCourseResponse> CreateAsync(CreateCourseRequest request, Guid userId)
-    {
-        var difficulty = ParseDifficulty(request.Difficulty);
-        var route = ResolveRoute(request.Route, request.GpxXml);
-        var tags = await _courseRepository.GetTagsByIdsForUpdateAsync(request.TagIds ?? []);
-
-        var course = Course.Create(
-        userId: userId,
-        title: request.Title,
-        description: request.Description,
-        difficulty: difficulty,
-        route: route,
-        isPublic: request.IsPublic,
-        tags: tags);
-
-        await _courseRepository.AddAsync(course);
-        var created = await _courseRepository.GetByIdAsync(course.Id)
-            ?? throw new NotFoundException("コースが見つかりません");
-        return new CreateCourseResponse(ToCourseDetailDto(created));
-    }
-
     public async Task<UpdateCourseResponse> UpdateAsync(Guid id, UpdateCourseRequest request, Guid userId)
     {
         var course = await _courseRepository.GetByIdForUpdateAsync(id)

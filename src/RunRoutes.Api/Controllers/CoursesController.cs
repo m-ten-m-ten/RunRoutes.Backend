@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RunRoutes.Api.Extensions;
+using RunRoutes.Core.Common.Commands;
 using RunRoutes.Core.Common.Queries;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Commands.CreateCourse;
 using RunRoutes.Core.Courses.Dtos;
 using RunRoutes.Core.Courses.Queries.GetCourseById;
 
@@ -10,9 +12,14 @@ namespace RunRoutes.Api.Controllers;
 
 [ApiController]
 [Route("api/courses")]
-public class CoursesController(ICourseService courseService, IQueryDispatcher queryDispatcher) : ControllerBase
+public class CoursesController(
+    ICourseService courseService,
+    IQueryDispatcher queryDispatcher,
+    ICommandDispatcher commandDispatcher
+    ) : ControllerBase
 {
     private readonly IQueryDispatcher _queryDispatcher = queryDispatcher;
+    private readonly ICommandDispatcher _commandDispatcher = commandDispatcher;
 
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] GetCoursesQuery query)
@@ -36,8 +43,10 @@ public class CoursesController(ICourseService courseService, IQueryDispatcher qu
     public async Task<IActionResult> Create([FromBody] CreateCourseRequest request)
     {
         var userId = User.GetUserId();
-        var result = await courseService.CreateAsync(request, userId);
-        return CreatedAtAction(nameof(GetById), new { id = result.Course.Id }, result);
+        var command = new CreateCourseCommand(request.Title, request.Description, request.Difficulty, request.IsPublic, request.Route, request.GpxXml, request.TagIds, userId);
+        var courseId = await _commandDispatcher.SendAsync(command);
+        var result = new CreateCourseResponse(new CreateCourseDto(courseId));
+        return CreatedAtAction(nameof(GetById), new { id = courseId }, result);
     }
 
     [HttpPut("{id:guid}")]
