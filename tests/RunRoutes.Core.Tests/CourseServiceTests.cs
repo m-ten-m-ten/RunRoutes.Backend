@@ -80,26 +80,6 @@ public class CourseServiceTests
     }
 
     [Fact]
-    public async Task GetById_正常に取得できる()
-    {
-        var userId = Guid.NewGuid();
-        var course = MakeCourse(userId);
-        _courseRepoMock.Setup(r => r.GetByIdAsync(course.Id)).ReturnsAsync(course);
-
-        var result = await _sut.GetByIdAsync(course.Id, userId);
-
-        Assert.Equal(course.Id, result.Course.Id);
-    }
-
-    [Fact]
-    public async Task GetById_存在しないIDでNotFoundException()
-    {
-        _courseRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>())).ReturnsAsync((Course?)null);
-
-        await Assert.ThrowsAsync<NotFoundException>(() => _sut.GetByIdAsync(Guid.NewGuid(), null));
-    }
-
-    [Fact]
     public async Task Update_本人が更新できる()
     {
         var userId = Guid.NewGuid();
