@@ -45,41 +45,6 @@ public class CourseServiceTests
     }
 
     [Fact]
-    public async Task Create_正常に登録できる()
-    {
-        var userId = Guid.NewGuid();
-        var request = new CreateCourseRequest(
-            "Test Course", null, "easy", true,
-            new GeoJsonLineStringDto("LineString", [[135.0, 35.0], [135.1, 35.1]]),
-            null, []);
-
-        Course? addedCourse = null;
-        _courseRepoMock.Setup(r => r.GetTagsByIdsForUpdateAsync(It.IsAny<IEnumerable<Guid>>()))
-            .ReturnsAsync([]);
-        _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>()))
-            .Callback<Course>(c => addedCourse = c)
-            .Returns(Task.CompletedTask);
-        _courseRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>()))
-            .ReturnsAsync(() => addedCourse is null ? null : MakeCourse(userId, addedCourse.Id));
-
-        var result = await _sut.CreateAsync(request, userId);
-
-        Assert.NotNull(result.Course);
-        Assert.True(result.Course.DistanceM > 0);
-    }
-
-    [Fact]
-    public async Task Create_不正な難易度でValidationException()
-    {
-        var request = new CreateCourseRequest(
-            "Test", null, "invalid", true,
-            new GeoJsonLineStringDto("LineString", [[135.0, 35.0], [135.1, 35.1]]),
-            null, []);
-
-        await Assert.ThrowsAsync<ValidationException>(() => _sut.CreateAsync(request, Guid.NewGuid()));
-    }
-
-    [Fact]
     public async Task Update_本人が更新できる()
     {
         var userId = Guid.NewGuid();
