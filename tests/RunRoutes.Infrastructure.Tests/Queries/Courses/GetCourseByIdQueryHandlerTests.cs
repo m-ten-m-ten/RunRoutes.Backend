@@ -1,4 +1,3 @@
-using NetTopologySuite.Geometries;
 using RunRoutes.Core.Common.Exceptions;
 using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Dtos;
@@ -30,7 +29,7 @@ public class GetCourseByIdQueryHandlerTests(PostgresContainerFixture fixture)
                 title: "テストコース",
                 description: "テストコースの説明",
                 difficulty: Difficulty.Easy,
-                route: CreateTestRoute(),
+                route: TestCourseBuilder.CreateTestRoute(),
                 isPublic: true,
                 tags: []);
             db.Courses.Add(course);
@@ -89,7 +88,7 @@ public class GetCourseByIdQueryHandlerTests(PostgresContainerFixture fixture)
                 title: "非公開コース",
                 description: null,
                 difficulty: Difficulty.Hard,
-                route: CreateTestRoute(),
+                route: TestCourseBuilder.CreateTestRoute(),
                 isPublic: false,
                 tags: []);
             db.Courses.Add(course);
@@ -110,19 +109,5 @@ public class GetCourseByIdQueryHandlerTests(PostgresContainerFixture fixture)
         }
     }
 
-
-    // ========================================
-    // テストヘルパ
-    // ========================================
-    private static LineString CreateTestRoute()
-    {
-        // 札幌駅付近の2点（SRID 4326）
-        var factory = new GeometryFactory(new PrecisionModel(), 4326);
-
-        return factory.CreateLineString([
-            new Coordinate(141.3507, 43.0686),
-            new Coordinate(141.3522, 43.0700),
-        ]);
-    }
 }
 

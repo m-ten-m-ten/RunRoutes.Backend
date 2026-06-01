@@ -5,7 +5,6 @@ namespace RunRoutes.Core.Courses;
 
 public interface ICourseRepository
 {
-    Task<(IEnumerable<Course> Courses, int TotalCount)> GetListAsync(GetCoursesQuery query, Guid? currentUserId);
     Task<Course?> GetByIdAsync(Guid id);
     Task<Course?> GetByIdForUpdateAsync(Guid id);
     Task<bool> ExistsByIdAsync(Guid id);

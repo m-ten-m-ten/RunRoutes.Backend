@@ -12,4 +12,4 @@ public record CreateCourseRequest(string Title, string? Description, string Diff
 public record CreateCourseResponse(CreateCourseDto Course);
 public record CreateCourseDto(Guid Id);
 public record UpdateCourseRequest(string? Title, string? Description, string? Difficulty, bool? IsPublic, GeoJsonLineStringDto? Route, string? GpxXml, IEnumerable<Guid>? TagIds);
-public record UpdateCourseResponse(CourseDetailDto Course);
+public record UpdateCourseResponse(CreateCourseDto Course);

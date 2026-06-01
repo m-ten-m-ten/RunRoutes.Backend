@@ -28,7 +28,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<ICourseService, CourseService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<AdminRoleSeeder>();
