@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.Mvc;
 using RunRoutes.Api.Extensions;
 using RunRoutes.Core.Common.Commands;
 using RunRoutes.Core.Common.Queries;
-using RunRoutes.Core.Courses;
 using RunRoutes.Core.Courses.Commands.CreateCourse;
+using RunRoutes.Core.Courses.Commands.DeleteCourse;
+using RunRoutes.Core.Courses.Commands.UpdateCourse;
 using RunRoutes.Core.Courses.Dtos;
 using RunRoutes.Core.Courses.Queries.GetCourseById;
+using RunRoutes.Core.Courses.Queries.ListCourses;
 
 namespace RunRoutes.Api.Controllers;
 
 [ApiController]
 [Route("api/courses")]
 public class CoursesController(
-    ICourseService courseService,
     IQueryDispatcher queryDispatcher,
     ICommandDispatcher commandDispatcher
     ) : ControllerBase
@@ -25,7 +26,7 @@ public class CoursesController(
     public async Task<IActionResult> GetList([FromQuery] GetCoursesQuery query)
     {
         Guid? currentUserId = User.Identity?.IsAuthenticated == true ? User.GetUserId() : null;
-        var result = await courseService.GetListAsync(query, currentUserId);
+        var result = await _queryDispatcher.SendAsync(new ListCoursesQuery(query.Lat, query.Lng, query.RadiusKm, query.Difficulty, query.TagIds, query.Page, query.PageSize, currentUserId));
         return Ok(result);
     }
 
@@ -54,7 +55,9 @@ public class CoursesController(
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCourseRequest request)
     {
         var userId = User.GetUserId();
-        var result = await courseService.UpdateAsync(id, request, userId);
+        var command = new UpdateCourseCommand(id, request.Title, request.Description, request.Difficulty, request.IsPublic, request.Route, request.GpxXml, request.TagIds, userId);
+        var courseId = await _commandDispatcher.SendAsync(command);
+        var result = new UpdateCourseResponse(new CreateCourseDto(courseId));
         return Ok(result);
     }
 
@@ -63,7 +66,8 @@ public class CoursesController(
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = User.GetUserId();
-        await courseService.DeleteAsync(id, userId);
+        var command = new DeleteCourseCommand(id, userId);
+        await _commandDispatcher.SendAsync(command);
         return NoContent();
     }
 }
