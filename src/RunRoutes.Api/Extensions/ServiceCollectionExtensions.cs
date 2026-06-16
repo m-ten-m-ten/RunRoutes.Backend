@@ -29,7 +29,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICommentService, CommentService>();
-        services.AddScoped<ITagService, TagService>();
         services.AddScoped<AdminRoleSeeder>();
 
         // ドメインイベント基盤
