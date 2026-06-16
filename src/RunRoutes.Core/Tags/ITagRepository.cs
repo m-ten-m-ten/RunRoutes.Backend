@@ -2,8 +2,6 @@ namespace RunRoutes.Core.Tags;
 
 public interface ITagRepository
 {
-    Task<IEnumerable<Tag>> GetAllAsync();
-    Task<Tag?> GetByIdAsync(Guid id);
     Task<Tag?> GetByIdForUpdateAsync(Guid id);
     Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null);
     Task<bool> HasCoursesAsync(Guid id);
