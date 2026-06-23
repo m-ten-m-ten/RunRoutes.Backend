@@ -27,7 +27,6 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<AdminRoleSeeder>();
 
         // ドメインイベント基盤
