@@ -38,6 +38,28 @@ internal static class TestUserBuilder
         return user;
     }
 
+    /// <summary>
+    /// 未有効化の一般ユーザーを作成する
+    /// </summary>
+    public static User CreateUnActivated(
+    string? email = null,
+    string? username = null,
+    string password = "Password123!")
+    {
+        var now = DateTime.UtcNow;
+        email ??= $"test{Guid.NewGuid():N}@example.com";
+        username ??= $"user_{Guid.NewGuid():N}"[..16];
+
+        return User.Register(
+            EmailAddress.Create(email),
+            Username.Create(username),
+            PlainPassword.Create(password),
+            BcryptHasher,
+            now,
+            TimeSpan.FromHours(24));
+        // Activate を呼ばない
+    }
+
     private sealed class BcryptTestHasher : IPasswordHasher
     {
         public HashedPassword Hash(PlainPassword plain) =>
