@@ -4,8 +4,6 @@ namespace RunRoutes.Core.Courses.Commands.CreateCourse;
 
 public class CreateCourseCommandValidator : AbstractValidator<CreateCourseCommand>
 {
-    private static readonly string[] AllowedDifficulties = ["easy", "medium", "hard"];
-
     public CreateCourseCommandValidator()
     {
         RuleFor(x => x.Title)
@@ -14,9 +12,9 @@ public class CreateCourseCommandValidator : AbstractValidator<CreateCourseComman
             .WithMessage("タイトルは必須です");
 
         RuleFor(x => x.Difficulty)
-            .Must(d => AllowedDifficulties.Contains(d, StringComparer.OrdinalIgnoreCase))
+            .Must(d => DifficultyNames.IsValid(d))
             .OverridePropertyName("difficulty")
-            .WithMessage("easy, medium, hard のいずれかを指定してください");
+            .WithMessage($"{DifficultyNames.AllowedText} のいずれかを指定してください");
 
         RuleFor(x => x)
             .Must(x => x.Route is not null || !string.IsNullOrWhiteSpace(x.GpxXml))

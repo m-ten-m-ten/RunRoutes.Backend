@@ -60,7 +60,7 @@ public class UpdateCourseCommandHandler(ICourseRepository courseRepository)
             || !Enum.IsDefined(typeof(Difficulty), result))
             throw new ValidationException(new Dictionary<string, string[]>
             {
-                ["difficulty"] = ["easy, medium, hard のいずれかを指定してください"]
+                ["difficulty"] = [$"{DifficultyNames.AllowedText} のいずれかを指定してください"]
             });
         return result;
     }
