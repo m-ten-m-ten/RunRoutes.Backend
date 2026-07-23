@@ -1,8 +1,10 @@
+using FluentValidation;
 using RunRoutes.Core.Common;
 using RunRoutes.Core.Common.Commands;
 using RunRoutes.Core.Common.DomainEvents;
 using RunRoutes.Core.Common.Queries;
 using RunRoutes.Core.Courses;
+using RunRoutes.Core.Courses.Commands.CreateCourse;
 using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
@@ -63,6 +65,11 @@ public static class ServiceCollectionExtensions
 
         // Behavior（登録順 = 外側からの実行順）
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+        // Validator の自動登録
+        services.AddValidatorsFromAssemblyContaining<CreateCourseCommandValidator>();
+
         return services;
     }
 }
