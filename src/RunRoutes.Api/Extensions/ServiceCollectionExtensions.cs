@@ -7,6 +7,7 @@ using RunRoutes.Core.Sessions;
 using RunRoutes.Core.Tags;
 using RunRoutes.Core.Users;
 using RunRoutes.Infrastructure.Auth;
+using RunRoutes.Infrastructure.Behaviors;
 using RunRoutes.Infrastructure.Commands;
 using RunRoutes.Infrastructure.DomainEvents;
 using RunRoutes.Infrastructure.Queries;
@@ -60,6 +61,8 @@ public static class ServiceCollectionExtensions
             .AsImplementedInterfaces()
             .WithScopedLifetime());
 
+        // Behavior（登録順 = 外側からの実行順）
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         return services;
     }
 }
