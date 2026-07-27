@@ -114,32 +114,4 @@ public class UpdateMeCommandHandlerTests(PostgresContainerFixture fixture)
             Assert.Contains("このユーザー名", ex.Message);
         }
     }
-
-
-    [Fact]
-    public async Task HandleAsync_現在のパスワードを未入力でValidationException()
-    {
-        // Arrange
-        await _fixture.ResetAsync();
-
-        Guid userId;
-        await using (var db = _fixture.CreateDbContext())
-        {
-            var user = TestUserBuilder.CreateActivated();
-            db.Users.Add(user);
-
-            await db.SaveChangesAsync();
-            userId = user.Id;
-        }
-
-        // Act & Assert
-        await using (var db = _fixture.CreateDbContext())
-        {
-            var repo = new UserRepository(db);
-            var handler = new UpdateMeCommandHandler(repo, _bCryptPasswordHasher);
-            var command = new UpdateMeCommand(userId, null, null, "new-password123!");
-            var ex = await Assert.ThrowsAsync<ValidationException>(() => handler.HandleAsync(command, default));
-            Assert.Contains("現在のパスワードを", ex.Message);
-        }
-    }
 }

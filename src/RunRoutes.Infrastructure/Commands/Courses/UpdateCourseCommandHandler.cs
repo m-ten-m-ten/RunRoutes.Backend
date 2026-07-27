@@ -30,7 +30,7 @@ public class UpdateCourseCommandHandler(ICourseRepository courseRepository)
             course.UpdateDescription(command.Description);
 
         if (command.Difficulty is not null)
-            course.ChangeDifficulty(ParseDifficulty(command.Difficulty));
+            course.ChangeDifficulty(Enum.Parse<Difficulty>(command.Difficulty, ignoreCase: true));
 
         if (command.IsPublic is not null)
         {
@@ -54,30 +54,21 @@ public class UpdateCourseCommandHandler(ICourseRepository courseRepository)
         return course.Id;
     }
 
-    private static Difficulty ParseDifficulty(string difficulty)
-    {
-        if (!Enum.TryParse<Difficulty>(difficulty, ignoreCase: true, out var result)
-            || !Enum.IsDefined(typeof(Difficulty), result))
-            throw new ValidationException(new Dictionary<string, string[]>
-            {
-                ["difficulty"] = [$"{DifficultyNames.AllowedText} のいずれかを指定してください"]
-            });
-        return result;
-    }
 
     private static LineString ResolveRoute(GeoJsonLineStringDto? geoJson, string? gpxXml)
     {
         if (geoJson is not null)
         {
             var coords = geoJson.Coordinates.Select(c => new Coordinate(c[0], c[1])).ToArray();
-            if (coords.Length < 2)
-                throw new ValidationException("ルートには2点以上の座標が必要です");
             return new LineString(coords) { SRID = 4326 };
         }
 
         if (gpxXml is not null)
             return GpxParser.Parse(gpxXml);
 
-        throw new ValidationException("route または gpxXml のいずれかを指定してください");
+        // Handler 側で「Route か GpxXml のいずれかが非 null」を確認してから呼んでいるため到達しない。
+        // ここに来たら入力ではなく呼び出し側の構造が壊れている。
+        throw new InvalidOperationException(
+            "ResolveRoute は route または gpxXml のいずれかが指定された状態でのみ呼ばれるはずです");
     }
 }
