@@ -33,11 +33,8 @@ public class UpdateMeCommandHandler(
 
         if (command.NewPassword is not null)
         {
-            if (string.IsNullOrEmpty(command.CurrentPassword))
-                throw new ValidationException("現在のパスワードを入力してください");
-
             user.ChangePassword(
-            PlainPassword.CreateForVerification(command.CurrentPassword),
+            PlainPassword.CreateForVerification(command.CurrentPassword!),
             PlainPassword.Create(command.NewPassword),
             _passwordHasher,
             DateTime.UtcNow);

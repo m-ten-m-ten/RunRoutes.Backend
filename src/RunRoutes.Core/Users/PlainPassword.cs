@@ -4,6 +4,9 @@ namespace RunRoutes.Core.Users;
 
 public sealed record PlainPassword
 {
+    internal const int MinLength = 8;
+    internal const int MaxLength = 100;
+
     public string Value { get; }
 
     private PlainPassword(string value)
@@ -18,10 +21,10 @@ public sealed record PlainPassword
     {
         if (string.IsNullOrEmpty(value))
             throw new ValidationException("パスワードは必須です");
-        if (value.Length < 8)
-            throw new ValidationException("パスワードは 8 文字以上で入力してください");
-        if (value.Length > 100)
-            throw new ValidationException("パスワードは 100 文字以下で入力してください");
+        if (value.Length < MinLength)
+            throw new ValidationException($"パスワードは {MinLength} 文字以上で入力してください");
+        if (value.Length > MaxLength)
+            throw new ValidationException($"パスワードは {MaxLength} 文字以下で入力してください");
 
         return new PlainPassword(value);
     }
