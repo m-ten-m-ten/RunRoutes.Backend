@@ -5,6 +5,8 @@ namespace RunRoutes.Core.Users;
 
 public sealed record EmailAddress
 {
+    internal const int MaxLength = 254;
+
     public string Value { get; }
 
     private EmailAddress(string value)
@@ -16,8 +18,8 @@ public sealed record EmailAddress
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ValidationException("メールアドレスは必須です");
-        if (value.Length > 254)
-            throw new ValidationException("メールアドレスは 254 文字以下にしてください");
+        if (value.Length > MaxLength)
+            throw new ValidationException($"メールアドレスは {MaxLength} 文字以下にしてください");
 
         var normalized = value.Trim().ToLowerInvariant();
         if (!Pattern.IsMatch(normalized))
@@ -28,6 +30,6 @@ public sealed record EmailAddress
 
     public override string ToString() => Value;
 
-    private static readonly Regex Pattern =
+    internal static readonly Regex Pattern =
         new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
 }
