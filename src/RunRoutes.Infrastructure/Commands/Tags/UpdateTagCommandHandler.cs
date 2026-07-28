@@ -18,7 +18,7 @@ public class UpdateTagCommandHandler(ITagRepository tagRepository) : ICommandHan
         var tag = await _tagRepository.GetByIdForUpdateAsync(command.Id)
     ?? throw new NotFoundException("タグが見つかりません");
 
-        var normalizedName = Tag.NormalizeNameForService(command.Name);
+        var normalizedName = Tag.NormalizeName(command.Name);
 
         if (!string.Equals(tag.Name, normalizedName, StringComparison.Ordinal))
         {
