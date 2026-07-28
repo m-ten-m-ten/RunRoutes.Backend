@@ -66,9 +66,9 @@ public class Tag
     }
 
     // ========================================
-    // 内部ヘルパー
+    // ヘルパー
     // ========================================
-    private static string NormalizeName(string name)
+    internal static string NormalizeName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ValidationException(new Dictionary<string, string[]>
@@ -85,6 +85,4 @@ public class Tag
 
         return trimmed;
     }
-
-    internal static string NormalizeNameForService(string name) => NormalizeName(name);
 }
