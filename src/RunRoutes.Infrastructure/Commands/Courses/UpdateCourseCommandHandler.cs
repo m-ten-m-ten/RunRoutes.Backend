@@ -26,8 +26,7 @@ public class UpdateCourseCommandHandler(ICourseRepository courseRepository)
         if (command.Title is not null)
             course.UpdateTitle(command.Title);
 
-        if (command.Description is not null)
-            course.UpdateDescription(command.Description);
+        course.UpdateDescription(command.Description);
 
         if (command.Difficulty is not null)
             course.ChangeDifficulty(Enum.Parse<Difficulty>(command.Difficulty, ignoreCase: true));

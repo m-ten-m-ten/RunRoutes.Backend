@@ -87,4 +87,45 @@ public class UpdateCourseCommandHandlerTests(PostgresContainerFixture fixture)
             await Assert.ThrowsAsync<ForbiddenException>(() => handler.HandleAsync(command, default));
         }
     }
+
+    [Fact]
+    public async Task HandleAsync_説明文をクリアできる()
+    {
+        // Arrange
+        await _fixture.ResetAsync();
+
+        Guid userId;
+        Guid courseId;
+        await using (var db = _fixture.CreateDbContext())
+        {
+            var user = TestUserBuilder.CreateActivated();
+            db.Users.Add(user);
+
+            Coordinate[] coords = [new Coordinate(141.3507, 43.0686), new Coordinate(141.3522, 43.0700)];
+            var route = new LineString(coords) { SRID = 4326 };
+            var course = Course.Create(user.Id, "コースタイトル", "テスト説明文", Difficulty.Easy,
+            route, true, []);
+            db.Courses.Add(course);
+
+            await db.SaveChangesAsync();
+            userId = user.Id;
+            courseId = course.Id;
+        }
+
+        // Act
+        await using (var db = _fixture.CreateDbContext())
+        {
+            var repo = new CourseRepository(db);
+            var handler = new UpdateCourseCommandHandler(repo);
+            var command = new UpdateCourseCommand(courseId, null, null, null, null, null, null, null, userId);
+            await handler.HandleAsync(command, default);
+        }
+
+        // Assert
+        await using (var db = _fixture.CreateDbContext())
+        {
+            var course = await db.Courses.FirstAsync(c => c.Id == courseId);
+            Assert.Null(course.Description);
+        }
+    }
 }
